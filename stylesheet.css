@@ -1,16 +1,17 @@
-/* Media Controls Extension Stylesheet */
+/* Media Controls Extension - Native GTK4 Dark Theme */
 
 .media-controls-box {
-  background-color: #383838;
+  background-color: transparent;
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
 }
 
 .media-control-button {
   background-color: transparent;
   border-radius: 50%;
   padding: 10px;
-  transition: background-color 200ms ease-in-out;
+  transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: none;
 }
 
 .media-control-button:hover {
@@ -19,15 +20,20 @@
 
 .media-control-button:active {
   background-color: rgba(255, 255, 255, 0.15);
+  transition: all 100ms;
+}
+
+.media-control-button.active {
+  color: @theme_selected_bg_color;
+}
+
+.media-control-button.active:hover {
+  color: @theme_selected_bg_color;
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 .media-control-button StIcon {
-  color: #b3b3b3;
-  transition: color 200ms ease-in-out;
-}
-
-.media-control-button:hover StIcon {
-  color: #ffffff;
+  transition: color 200ms ease;
 }
 
 .media-controls-item {
@@ -37,49 +43,72 @@
 
 /* Tab buttons */
 .media-tab-button {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 4px 6px;
-  transition: background-color 150ms ease-in-out;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 8px;
+  transition: all 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .media-tab-button:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .media-tab-button.active {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: @theme_selected_bg_color;
+  border-color: @theme_selected_bg_color;
+  opacity: 0.85;
 }
 
-/* Smooth transitions for all elements */
+.media-tab-button.active:hover {
+  opacity: 1;
+}
+
+/* Panel buttons */
+.panel-button {
+  transition: all 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.panel-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.panel-button:active {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Slider styling - Native GTK4 look */
+.slider {
+  height: 6px;
+  -slider-height: 6px;
+  -slider-background-color: rgba(255, 255, 255, 0.2);
+  -slider-border-color: transparent;
+  -slider-active-background-color: @theme_selected_bg_color;
+  -slider-active-border-color: transparent;
+  -slider-border-width: 0;
+  -slider-handle-radius: 8px;
+  -slider-handle-border-width: 0;
+  -slider-handle-border-color: transparent;
+  color: @theme_selected_bg_color;
+}
+
+.slider:hover {
+  -slider-background-color: rgba(255, 255, 255, 0.25);
+  -slider-handle-radius: 9px;
+}
+
+.slider:active {
+  -slider-handle-radius: 10px;
+}
+
+/* Smooth transitions */
 * {
-  transition-duration: 150ms;
-  transition-timing-function: ease-in-out;
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Panel icon */
+/* System status icon */
 .system-status-icon {
   icon-size: 16px;
-}
-
-/* Scrollbar-style progress bar */
-.media-slider-background {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
-}
-
-.media-slider-fill {
-  background-color: #1db954;
-  border-radius: 2px;
-}
-
-.media-slider-handle {
-  background-color: #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.media-slider-handle:hover {
-  background-color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  margin: 0 2px;
 }

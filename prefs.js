@@ -25,7 +25,6 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     const positionRow = new Adw.ComboRow({
       title: "Panel Position",
     });
-    positionRow.subtitle = "Where to show the indicator in the panel";
     
     const positionModel = new Gtk.StringList();
     positionModel.append("Left");
@@ -53,7 +52,6 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
         page_increment: 1,
       }),
     });
-    indexRow.subtitle = "Position within the panel area (0 = leftmost/rightmost)";
     
     settings.bind(
       "panel-index",
@@ -75,7 +73,6 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     const showTrackRow = new Adw.SwitchRow({
       title: "Show Track Name",
     });
-    showTrackRow.subtitle = "Display scrolling track name in the panel while playing";
     
     settings.bind(
       "show-track-name",
@@ -90,7 +87,6 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     const showArtistRow = new Adw.SwitchRow({
       title: "Show Artist Name",
     });
-    showArtistRow.subtitle = "Include artist name with track title";
     
     settings.bind(
       "show-artist",
@@ -111,7 +107,6 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
         page_increment: 10,
       }),
     });
-    maxLengthRow.subtitle = "Maximum characters before scrolling starts";
     
     settings.bind(
       "max-title-length",
@@ -132,7 +127,6 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
         page_increment: 1,
       }),
     });
-    scrollSpeedRow.subtitle = "How fast the text scrolls (1=slowest, 10=fastest)";
     
     settings.bind(
       "scroll-speed",
@@ -149,15 +143,12 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     });
     separatorRow.show_apply_button = true;
     
-    // Set initial value
     separatorRow.text = settings.get_string("separator-text");
     
-    // Connect apply signal
     separatorRow.connect("apply", () => {
       settings.set_string("separator-text", separatorRow.text);
     });
     
-    // Also update on focus lost
     separatorRow.connect("changed", () => {
       settings.set_string("separator-text", separatorRow.text);
     });
@@ -175,7 +166,6 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     const lockScreenRow = new Adw.SwitchRow({
       title: "Show on Lock Screen",
     });
-    lockScreenRow.subtitle = "Display media controls when the screen is locked";
     
     settings.bind(
       "show-on-lock-screen",
@@ -185,19 +175,6 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     );
     
     lockScreenGroup.add(lockScreenRow);
-
-    // Info Group
-    const infoGroup = new Adw.PreferencesGroup({
-      title: "Information",
-    });
-    generalPage.add(infoGroup);
-
-    const restartRow = new Adw.ActionRow({
-      title: "⚠️ Restart Required",
-    });
-    restartRow.subtitle = "Panel position changes require restarting GNOME Shell\nPress Alt+F2, type 'r', and press Enter (X11 only)\nOr log out and back in (Wayland)";
-    
-    infoGroup.add(restartRow);
 
     // About page
     const aboutPage = new Adw.PreferencesPage({
@@ -212,7 +189,10 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     const aboutRow = new Adw.ActionRow({
       title: "Media Controls Extension",
     });
-    aboutRow.subtitle = "MPRIS media player integration for GNOME Shell\n\nVersion 2.0\n\nFeatures GPU-accelerated rendering, fast image loading,\nand seamless integration with your favorite media players.";
+    aboutRow.add_suffix(new Gtk.Label({
+      label: "v2.1",
+      css_classes: ["dim-label"],
+    }));
     
     aboutGroup.add(aboutRow);
   }

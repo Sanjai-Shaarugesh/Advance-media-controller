@@ -22,10 +22,10 @@ export const MediaIndicator = GObject.registerClass(
       this._settingsChangedId = 0;
       this._sessionModeId = 0;
 
-      // Create horizontal layout for icon, controls and text
+      // Create horizontal layout for icon and controls
       this._box = new St.BoxLayout({
         style_class: "panel-status-menu-box",
-        style: "spacing: 8px;",
+        style: "spacing: 6px;",
       });
       this.add_child(this._box);
 
@@ -39,29 +39,48 @@ export const MediaIndicator = GObject.registerClass(
 
       // Panel control buttons container
       this._panelControlsBox = new St.BoxLayout({
-        style: "spacing: 4px;",
+        style: "spacing: 3px;",
       });
       this._box.add_child(this._panelControlsBox);
 
       // Previous button
       this._panelPrevBtn = this._createPanelButton("media-skip-backward-symbolic");
-      this._panelPrevBtn.connect("clicked", () => this._onPrevious());
+      this._panelPrevBtn.connect("button-press-event", (actor, event) => {
+        if (event.get_button() === 1) {
+          this._onPrevious();
+          return Clutter.EVENT_STOP;
+        }
+        return Clutter.EVENT_PROPAGATE;
+      });
       this._panelControlsBox.add_child(this._panelPrevBtn);
 
       // Play/Pause button
       this._panelPlayBtn = this._createPanelButton("media-playback-start-symbolic");
-      this._panelPlayBtn.connect("clicked", () => this._onPlayPause());
+      this._panelPlayBtn.connect("button-press-event", (actor, event) => {
+        if (event.get_button() === 1) {
+          this._onPlayPause();
+          return Clutter.EVENT_STOP;
+        }
+        return Clutter.EVENT_PROPAGATE;
+      });
       this._panelControlsBox.add_child(this._panelPlayBtn);
 
       // Next button
       this._panelNextBtn = this._createPanelButton("media-skip-forward-symbolic");
-      this._panelNextBtn.connect("clicked", () => this._onNext());
+      this._panelNextBtn.connect("button-press-event", (actor, event) => {
+        if (event.get_button() === 1) {
+          this._onNext();
+          return Clutter.EVENT_STOP;
+        }
+        return Clutter.EVENT_PROPAGATE;
+      });
       this._panelControlsBox.add_child(this._panelNextBtn);
 
       // Scrolling label
       this._label = new St.Label({
         text: "",
         y_align: Clutter.ActorAlign.CENTER,
+        style: "margin-left: 4px;",
       });
       this._label.clutter_text.ellipsize = 0;
       this._box.add_child(this._label);
@@ -98,9 +117,13 @@ export const MediaIndicator = GObject.registerClass(
       });
 
       // Settings bindings
-      this._settingsChangedId = this._settings.connect("changed", () => {
-        this._updateLabel();
-        this._updateVisibility();
+      this._settingsChangedId = this._settings.connect("changed", (_, key) => {
+        if (key === "panel-position" || key === "panel-index") {
+          this._repositionIndicator();
+        } else {
+          this._updateLabel();
+          this._updateVisibility();
+        }
       });
 
       // Monitor session mode for lock screen
@@ -119,28 +142,57 @@ export const MediaIndicator = GObject.registerClass(
     _createPanelButton(iconName) {
       const button = new St.Button({
         style_class: "panel-button",
-        style: "padding: 2px 4px; border-radius: 4px;",
+        style: "padding: 3px 5px; border-radius: 3px;",
         can_focus: true,
         track_hover: true,
+        reactive: true,
       });
 
       const icon = new St.Icon({
         icon_name: iconName,
         icon_size: 14,
-        style: "color: #ffffff;",
       });
 
       button.set_child(icon);
 
       button.connect("enter-event", () => {
-        button.style = "padding: 2px 4px; border-radius: 4px; background-color: rgba(255,255,255,0.15);";
+        button.style = "padding: 3px 5px; border-radius: 3px; background-color: rgba(255,255,255,0.1);";
       });
 
       button.connect("leave-event", () => {
-        button.style = "padding: 2px 4px; border-radius: 4px;";
+        button.style = "padding: 3px 5px; border-radius: 3px;";
       });
 
       return button;
+    }
+
+    _repositionIndicator() {
+      log("MediaControls: Starting reposition...");
+      
+      const position = this._settings.get_string("panel-position");
+      const index = this._settings.get_int("panel-index");
+      
+      // Store current state
+      const wasVisible = this.visible;
+      const currentManager = this._manager;
+      const currentPlayer = this._currentPlayer;
+      
+      // Remove from panel
+      this.container.remove_child(this);
+      
+      // Add back to new position
+      const actualIndex = index === -1 ? 0 : index;
+      Main.panel.addToStatusArea("media-controls", this, actualIndex, position);
+      
+      // Restore state
+      this._manager = currentManager;
+      this._currentPlayer = currentPlayer;
+      
+      if (wasVisible) {
+        this.show();
+      }
+      
+      log(`MediaControls: Repositioned to ${position}[${actualIndex}]`);
     }
 
     async _initManager() {
@@ -180,8 +232,6 @@ export const MediaIndicator = GObject.registerClass(
       const showOnLockScreen = this._settings.get_boolean("show-on-lock-screen");
       const hasPlayers = this._manager && this._manager.getPlayers().length > 0;
 
-      log(`MediaControls: isLocked=${isLocked}, isUnlockDialog=${isUnlockDialog}, showOnLockScreen=${showOnLockScreen}, hasPlayers=${hasPlayers}`);
-
       if (!hasPlayers) {
         this.hide();
         return;
@@ -191,16 +241,12 @@ export const MediaIndicator = GObject.registerClass(
       const hasMedia = info && (info.status === "Playing" || info.status === "Paused");
 
       if (isLocked || isUnlockDialog) {
-        // On lock screen or unlock dialog
         if (showOnLockScreen && hasMedia) {
-          log("MediaControls: Showing on lock screen");
           this.show();
         } else {
-          log("MediaControls: Hiding on lock screen");
           this.hide();
         }
       } else {
-        // Not locked - show if has media
         if (hasMedia) {
           this.show();
         } else {
@@ -324,8 +370,7 @@ export const MediaIndicator = GObject.registerClass(
       const appIcon = this._manager.getAppIcon(this._currentPlayer);
       this._icon.icon_name = appIcon;
       
-      // Log for debugging
-      log(`MediaControls: Updated panel icon to ${appIcon} for player ${this._currentPlayer}`);
+      log(`MediaControls: Panel icon set to ${appIcon}`);
     }
 
     _updateLabel() {
