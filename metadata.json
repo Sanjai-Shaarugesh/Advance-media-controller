@@ -1,7 +1,16 @@
 {
-  "name":"exp",
-  "description":"exprement extension",
-  "uuid":"exp@sanjai.com",
-  "shell-version":["45","46","47","48","49"],
-   "settings-schema": "org.gnome.shell.extensions.mediacontrols"
+  "name": "Advanced Media Controller",
+  "description": "Beautiful and modern media controls with multi-instance support. Control your music players directly from the panel with album art, progress tracking, and smart tab switching for browser media.",
+  "uuid": "advanced-media-controller@sanjai.com",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49"
+  ],
+  "version": 1,
+  "url": "https://github.com/Sanjai-Shaarugesh/Advance-media-controller",
+  "settings-schema": "org.gnome.shell.extensions.advanced-media-controller",
+  "gettext-domain": "advanced-media-controller"
 }

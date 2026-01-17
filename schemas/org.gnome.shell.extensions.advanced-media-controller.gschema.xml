@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.gnome.shell.extensions.mediacontrols" path="/org/gnome/shell/extensions/mediacontrols/">
+  <schema id="org.gnome.shell.extensions.advanced-media-controller" path="/org/gnome/shell/extensions/advanced-media-controller/">
     
     <key name="panel-position" type="s">
       <choices>
@@ -56,25 +56,6 @@
       <default>" • "</default>
       <summary>Separator text</summary>
       <description>Text to separate track and artist (default: " • ")</description>
-    </key>
-    
-    <key name="show-on-lock-screen" type="b">
-      <default>true</default>
-      <summary>Show on lock screen</summary>
-      <description>Display media controls on the lock screen</description>
-    </key>
-    
-    <key name="auto-hide-popup" type="b">
-      <default>true</default>
-      <summary>Auto-hide popup on external click</summary>
-      <description>Automatically close the popup menu when clicking outside of it</description>
-    </key>
-    
-    <key name="popup-timeout" type="i">
-      <default>0</default>
-      <range min="0" max="60"/>
-      <summary>Popup auto-close timeout (seconds)</summary>
-      <description>Automatically close popup after this many seconds of inactivity (0 = disabled)</description>
     </key>
     
   </schema>

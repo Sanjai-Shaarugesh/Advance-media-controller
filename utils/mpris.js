@@ -1,6 +1,7 @@
 import Gio from "gi://Gio";
 import GLib from "gi://GLib";
 import Gtk from "gi://Gtk";
+import Shell from "gi://Shell";
 
 const MPRIS_PREFIX = "org.mpris.MediaPlayer2";
 const MPRIS_PATH = "/org/mpris/MediaPlayer2";
@@ -42,6 +43,7 @@ export class MprisManager {
     this._proxies = new Map();
     this._identities = new Map();
     this._desktopEntries = new Map();
+    this._instanceMetadata = new Map(); // Track metadata per instance
     this._subscriptions = [];
     this._onPlayerAdded = null;
     this._onPlayerRemoved = null;
@@ -133,6 +135,8 @@ export class MprisManager {
           "LoopStatus" in props ||
           "Position" in props
         ) {
+          // Update instance metadata cache
+          this._updateInstanceMetadata(name);
           this._onPlayerChanged?.(name);
         }
       });
@@ -141,9 +145,24 @@ export class MprisManager {
         this._onSeeked?.(name, position);
       });
 
+      // Initialize instance metadata
+      this._updateInstanceMetadata(name);
+      
       this._onPlayerAdded?.(name);
     } catch (e) {
       logError(e, `Failed to add player ${name}`);
+    }
+  }
+
+  _updateInstanceMetadata(name) {
+    const info = this.getPlayerInfo(name);
+    if (info && info.title) {
+      this._instanceMetadata.set(name, {
+        title: info.title,
+        artists: info.artists,
+        trackId: info.trackId,
+        status: info.status,
+      });
     }
   }
 
@@ -213,6 +232,7 @@ export class MprisManager {
     this._proxies.delete(name);
     this._identities.delete(name);
     this._desktopEntries.delete(name);
+    this._instanceMetadata.delete(name);
     this._onPlayerRemoved?.(name);
   }
 
@@ -297,8 +317,100 @@ export class MprisManager {
     }
   }
 
+  /**
+   * Get a display label for a player instance
+   * For multi-instance apps (like browsers), includes track info
+   */
+  getPlayerDisplayLabel(name) {
+    const baseApp = this._getBaseAppName(name);
+    const instances = this._getInstancesOfApp(baseApp);
+    
+    // If only one instance, just return the app name
+    if (instances.length <= 1) {
+      return this.getPlayerIdentity(name);
+    }
+    
+    // Multiple instances - add track info to differentiate
+    const metadata = this._instanceMetadata.get(name);
+    if (metadata && metadata.title) {
+      const shortTitle = metadata.title.length > 25 
+        ? metadata.title.substring(0, 25) + "..." 
+        : metadata.title;
+      return `${this.getPlayerIdentity(name)}: ${shortTitle}`;
+    }
+    
+    return this.getPlayerIdentity(name);
+  }
+
+  /**
+   * Get base app name (without instance suffix)
+   */
+  _getBaseAppName(name) {
+    // Remove instance suffix like .instance_1234_5678
+    return name.replace(/\.instance_\d+_\d+$/, "");
+  }
+
+  /**
+   * Get all instances of the same app
+   */
+  _getInstancesOfApp(baseAppName) {
+    const instances = [];
+    for (const name of this._proxies.keys()) {
+      if (this._getBaseAppName(name) === baseAppName) {
+        instances.push(name);
+      }
+    }
+    return instances;
+  }
+
+  /**
+   * Group players by base app
+   * Returns: Map<baseAppName, playerName[]>
+   */
+  getGroupedPlayers() {
+    const groups = new Map();
+    
+    for (const name of this._proxies.keys()) {
+      const baseApp = this._getBaseAppName(name);
+      if (!groups.has(baseApp)) {
+        groups.set(baseApp, []);
+      }
+      groups.get(baseApp).push(name);
+    }
+    
+    return groups;
+  }
+
   getPlayerIdentity(name) {
     return this._identities.get(name) || name.replace(`${MPRIS_PREFIX}.`, "");
+  }
+
+  getAppInfo(name) {
+    try {
+      const desktopEntry = this._desktopEntries.get(name);
+      if (desktopEntry) {
+        let appInfo = Gio.DesktopAppInfo.new(`${desktopEntry}.desktop`);
+        if (appInfo) return appInfo;
+        
+        appInfo = Gio.DesktopAppInfo.new(desktopEntry);
+        if (appInfo) return appInfo;
+      }
+
+      let cleanName = name.replace(`${MPRIS_PREFIX}.`, "").toLowerCase();
+      cleanName = cleanName.replace(/\.instance_\d+_\d+$/, "");
+      
+      const appSystem = Shell.AppSystem.get_default();
+      const app = appSystem.lookup_app(`${cleanName}.desktop`);
+      
+      if (app) {
+        return app.get_app_info();
+      }
+
+      return null;
+    } catch (e) {
+      logError(e, `Error getting app info for ${name}`);
+      return null;
+    }
   }
 
   getAppIcon(name) {
@@ -481,6 +593,7 @@ export class MprisManager {
     this._proxies.clear();
     this._identities.clear();
     this._desktopEntries.clear();
+    this._instanceMetadata.clear();
     this._bus = null;
   }
 }

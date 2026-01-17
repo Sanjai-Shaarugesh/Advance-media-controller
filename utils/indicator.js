@@ -31,16 +31,16 @@ export const MediaIndicator = GObject.registerClass(
       // Create horizontal layout
       this._box = new St.BoxLayout({
         style_class: "panel-status-menu-box panel-button-box",
-        style: "spacing: 4px;",
+        style: "spacing: 6px;",
       });
       this.add_child(this._box);
 
-      // Panel icon
+      // Panel app icon (actual colored icon, showing which app is playing)
       this._icon = new St.Icon({
-        icon_name: "audio-x-generic-symbolic",
-        style_class: "system-status-icon colored-icon",
-        icon_size: 16,
+        icon_size: 18,
+        y_align: Clutter.ActorAlign.CENTER,
       });
+      this._icon.set_fallback_gicon(null);
       this._box.add_child(this._icon);
 
       // Panel control buttons
@@ -172,7 +172,6 @@ export const MediaIndicator = GObject.registerClass(
 
         const focusedWindow = global.display.focus_window;
         
-        // Close popup when any window gains focus
         if (focusedWindow) {
           this.menu.close();
         }
@@ -310,7 +309,7 @@ export const MediaIndicator = GObject.registerClass(
     _updateVisibility() {
       const isLocked = Main.sessionMode.isLocked;
       const isUnlockDialog = Main.sessionMode.currentMode === 'unlock-dialog';
-      const showOnLockScreen = this._settings.get_boolean("show-on-lock-screen");
+      
       const hasPlayers = this._manager && this._manager.getPlayers().length > 0;
 
       if (!hasPlayers) {
@@ -461,12 +460,17 @@ export const MediaIndicator = GObject.registerClass(
 
     _updateAppIcon() {
       if (!this._currentPlayer) {
-        this._icon.icon_name = "audio-x-generic-symbolic";
+        this._icon.set_gicon(Gio.icon_new_for_string("audio-x-generic-symbolic"));
         return;
       }
 
-      const appIcon = this._manager.getAppIcon(this._currentPlayer);
-      this._icon.icon_name = appIcon;
+      // Get the actual app icon (colored, not symbolic)
+      const appInfo = this._manager.getAppInfo(this._currentPlayer);
+      if (appInfo && appInfo.get_icon()) {
+        this._icon.set_gicon(appInfo.get_icon());
+      } else {
+        this._icon.set_gicon(Gio.icon_new_for_string("audio-x-generic-symbolic"));
+      }
     }
 
     _updateLabel() {
