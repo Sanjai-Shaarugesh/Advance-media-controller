@@ -21,6 +21,7 @@ export const MediaIndicator = GObject.registerClass(
       this._fullText = "";
       this._settingsChangedId = 0;
       this._sessionModeId = 0;
+      this._updateThrottle = null;
 
       // Create horizontal layout for icon and controls
       this._box = new St.BoxLayout({
@@ -119,7 +120,10 @@ export const MediaIndicator = GObject.registerClass(
       // Settings bindings
       this._settingsChangedId = this._settings.connect("changed", (_, key) => {
         if (key === "panel-position" || key === "panel-index") {
-          this._repositionIndicator();
+          GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+            this._repositionIndicator();
+            return GLib.SOURCE_REMOVE;
+          });
         } else {
           this._updateLabel();
           this._updateVisibility();
@@ -167,32 +171,55 @@ export const MediaIndicator = GObject.registerClass(
     }
 
     _repositionIndicator() {
-      log("MediaControls: Starting reposition...");
+      log("MediaControls: Repositioning indicator...");
       
       const position = this._settings.get_string("panel-position");
       const index = this._settings.get_int("panel-index");
       
-      // Store current state
+      // Save state
       const wasVisible = this.visible;
-      const currentManager = this._manager;
-      const currentPlayer = this._currentPlayer;
+      const manager = this._manager;
+      const player = this._currentPlayer;
       
-      // Remove from panel
-      this.container.remove_child(this);
-      
-      // Add back to new position
-      const actualIndex = index === -1 ? 0 : index;
-      Main.panel.addToStatusArea("media-controls", this, actualIndex, position);
-      
-      // Restore state
-      this._manager = currentManager;
-      this._currentPlayer = currentPlayer;
-      
-      if (wasVisible) {
-        this.show();
+      try {
+        // Remove from current position
+        if (this.container && this.container.get_parent()) {
+          this.container.get_parent().remove_child(this.container);
+        }
+        
+        // Determine target box
+        let targetBox;
+        switch (position) {
+          case "left":
+            targetBox = Main.panel._leftBox;
+            break;
+          case "center":
+            targetBox = Main.panel._centerBox;
+            break;
+          case "right":
+          default:
+            targetBox = Main.panel._rightBox;
+            break;
+        }
+        
+        // Calculate actual index
+        const actualIndex = index === -1 ? 0 : Math.min(index, targetBox.get_n_children());
+        
+        // Insert at new position
+        targetBox.insert_child_at_index(this.container, actualIndex);
+        
+        // Restore state
+        this._manager = manager;
+        this._currentPlayer = player;
+        
+        if (wasVisible) {
+          this.show();
+        }
+        
+        log(`MediaControls: Repositioned to ${position}[${actualIndex}]`);
+      } catch (e) {
+        logError(e, "MediaControls: Failed to reposition");
       }
-      
-      log(`MediaControls: Repositioned to ${position}[${actualIndex}]`);
     }
 
     async _initManager() {
@@ -283,8 +310,22 @@ export const MediaIndicator = GObject.registerClass(
       const info = this._manager.getPlayerInfo(name);
 
       if (this._currentPlayer === name) {
-        this._updateUI();
-        this._updateVisibility();
+        // Throttle UI updates to reduce CPU usage
+        if (this._updateThrottle) {
+          GLib.source_remove(this._updateThrottle);
+        }
+        
+        this._updateThrottle = GLib.timeout_add(GLib.PRIORITY_LOW, 50, () => {
+          this._updateUI();
+          this._updateVisibility();
+          
+          if (this.menu.isOpen && this._controls) {
+            this._controls.update(info, name, this._manager);
+          }
+          
+          this._updateThrottle = null;
+          return GLib.SOURCE_REMOVE;
+        });
       } else if (info && info.status === "Playing") {
         this._currentPlayer = name;
         this._updateUI();
@@ -369,8 +410,6 @@ export const MediaIndicator = GObject.registerClass(
 
       const appIcon = this._manager.getAppIcon(this._currentPlayer);
       this._icon.icon_name = appIcon;
-      
-      log(`MediaControls: Panel icon set to ${appIcon}`);
     }
 
     _updateLabel() {
@@ -513,6 +552,11 @@ export const MediaIndicator = GObject.registerClass(
 
     destroy() {
       this._stopScrolling();
+      
+      if (this._updateThrottle) {
+        GLib.source_remove(this._updateThrottle);
+        this._updateThrottle = null;
+      }
       
       if (this._settingsChangedId) {
         this._settings.disconnect(this._settingsChangedId);

@@ -8,19 +8,11 @@ export default class MediaExtension extends Extension {
 
     this._settings = this.getSettings();
     
-    // Get panel position settings
-    const position = this._settings.get_string("panel-position");
-    const index = this._settings.get_int("panel-index");
-
+    // Create indicator
     this._indicator = new MediaIndicator(this._settings);
     
     // Add to panel with configured position
-    Main.panel.addToStatusArea(
-      "media-controls",
-      this._indicator,
-      index === -1 ? 0 : index,
-      position
-    );
+    this._addToPanel();
 
     // Watch for lock screen setting
     this._lockScreenChangedId = this._settings.connect(
@@ -44,6 +36,34 @@ export default class MediaExtension extends Extension {
     });
 
     this._updateLockScreenVisibility();
+  }
+
+  _addToPanel() {
+    const position = this._settings.get_string("panel-position");
+    const index = this._settings.get_int("panel-index");
+    
+    // Determine target box
+    let targetBox;
+    switch (position) {
+      case "left":
+        targetBox = Main.panel._leftBox;
+        break;
+      case "center":
+        targetBox = Main.panel._centerBox;
+        break;
+      case "right":
+      default:
+        targetBox = Main.panel._rightBox;
+        break;
+    }
+    
+    // Calculate actual index
+    const actualIndex = index === -1 ? 0 : Math.min(index, targetBox.get_n_children());
+    
+    // Add indicator
+    targetBox.insert_child_at_index(this._indicator.container, actualIndex);
+    
+    log(`MediaControls: Added to panel at ${position}[${actualIndex}]`);
   }
 
   _updateLockScreenVisibility() {
