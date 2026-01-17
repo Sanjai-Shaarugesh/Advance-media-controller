@@ -1,0 +1,7 @@
+{
+  "name":"exp",
+  "description":"exprement extension",
+  "uuid":"exp@sanjai.com",
+  "shell-version":["45","46","47","48","49"],
+   "settings-schema": "org.gnome.shell.extensions.mediacontrols"
+}

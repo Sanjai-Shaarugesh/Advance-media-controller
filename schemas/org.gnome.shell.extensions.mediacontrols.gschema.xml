@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.mediacontrols" path="/org/gnome/shell/extensions/mediacontrols/">
+    
+    <key name="panel-position" type="s">
+      <choices>
+        <choice value="left"/>
+        <choice value="center"/>
+        <choice value="right"/>
+      </choices>
+      <default>"right"</default>
+      <summary>Panel position</summary>
+      <description>Position of the media controls indicator in the panel</description>
+    </key>
+    
+    <key name="panel-index" type="i">
+      <default>0</default>
+      <range min="-1" max="20"/>
+      <summary>Panel index</summary>
+      <description>Index position within the panel area (-1 for automatic)</description>
+    </key>
+    
+    <key name="show-track-name" type="b">
+      <default>true</default>
+      <summary>Show track name in panel</summary>
+      <description>Display scrolling track name next to the icon when playing</description>
+    </key>
+    
+    <key name="max-title-length" type="i">
+      <default>30</default>
+      <range min="10" max="100"/>
+      <summary>Maximum title length</summary>
+      <description>Maximum number of characters to display in panel before scrolling</description>
+    </key>
+    
+    <key name="scroll-speed" type="i">
+      <default>2</default>
+      <range min="1" max="10"/>
+      <summary>Scroll speed</summary>
+      <description>Speed of text scrolling (1=slowest, 10=fastest)</description>
+    </key>
+    
+    <key name="show-artist" type="b">
+      <default>false</default>
+      <summary>Show artist name</summary>
+      <description>Include artist name with track title in panel</description>
+    </key>
+    
+    <key name="separator-text" type="s">
+      <default>" • "</default>
+      <summary>Separator text</summary>
+      <description>Text to separate track and artist (default: " • ")</description>
+    </key>
+    
+    <key name="show-on-lock-screen" type="b">
+      <default>true</default>
+      <summary>Show on lock screen</summary>
+      <description>Display media controls on the lock screen</description>
+    </key>
+    
+  </schema>
+</schemalist>

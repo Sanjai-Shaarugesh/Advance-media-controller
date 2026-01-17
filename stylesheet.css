@@ -1,0 +1,85 @@
+/* Media Controls Extension Stylesheet */
+
+.media-controls-box {
+  background-color: #383838;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.media-control-button {
+  background-color: transparent;
+  border-radius: 50%;
+  padding: 10px;
+  transition: background-color 200ms ease-in-out;
+}
+
+.media-control-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.media-control-button:active {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.media-control-button StIcon {
+  color: #b3b3b3;
+  transition: color 200ms ease-in-out;
+}
+
+.media-control-button:hover StIcon {
+  color: #ffffff;
+}
+
+.media-controls-item {
+  padding: 0;
+  margin: 0;
+}
+
+/* Tab buttons */
+.media-tab-button {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 4px 6px;
+  transition: background-color 150ms ease-in-out;
+}
+
+.media-tab-button:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.media-tab-button.active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Smooth transitions for all elements */
+* {
+  transition-duration: 150ms;
+  transition-timing-function: ease-in-out;
+}
+
+/* Panel icon */
+.system-status-icon {
+  icon-size: 16px;
+}
+
+/* Scrollbar-style progress bar */
+.media-slider-background {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.media-slider-fill {
+  background-color: #1db954;
+  border-radius: 2px;
+}
+
+.media-slider-handle {
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.media-slider-handle:hover {
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}

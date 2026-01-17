@@ -1,0 +1,2 @@
+dbus-run-session gnome-shell --devkit --wayland
+glib-compile-schemas schemas/
