@@ -108,10 +108,8 @@ export class MprisManager {
     if (!name.startsWith(`${MPRIS_PREFIX}.`)) return;
 
     if (!oldOwner && newOwner) {
-      // Player started
       await this._addPlayer(name);
     } else if (oldOwner && !newOwner) {
-      // Player exited
       this._removePlayer(name);
     }
   }
@@ -123,24 +121,22 @@ export class MprisManager {
       const proxy = await this._createProxy(name);
       this._proxies.set(name, proxy);
 
-      // Fetch metadata
       await this._fetchIdentity(name);
       await this._fetchDesktopEntry(name);
 
-      // Connect property change signal
       proxy.connect("g-properties-changed", (p, changed) => {
         const props = changed.deep_unpack();
         if (
           "Metadata" in props ||
           "PlaybackStatus" in props ||
           "Shuffle" in props ||
-          "LoopStatus" in props
+          "LoopStatus" in props ||
+          "Position" in props
         ) {
           this._onPlayerChanged?.(name);
         }
       });
 
-      // Connect seeked signal
       proxy.connectSignal("Seeked", (proxy, sender, [position]) => {
         this._onSeeked?.(name, position);
       });
@@ -208,7 +204,6 @@ export class MprisManager {
     const proxy = this._proxies.get(name);
     if (proxy) {
       try {
-        // Disconnect all signals to prevent memory leaks
         GObject.signal_handlers_destroy(proxy);
       } catch (e) {
         // Ignore cleanup errors
@@ -248,21 +243,16 @@ export class MprisManager {
     if (!proxy) return null;
 
     try {
-      // Get playback status
       const statusV = proxy.get_cached_property("PlaybackStatus");
       const status = statusV ? statusV.deep_unpack() : "Stopped";
 
-      // Validate status
       if (status !== "Playing" && status !== "Paused" && status !== "Stopped") {
-        logError(null, `Unknown playback status: ${status}`);
         return null;
       }
 
-      // Get metadata
       const metaV = proxy.get_cached_property("Metadata");
       if (!metaV) return null;
 
-      // Parse metadata dictionary (reference implementation style)
       const meta = {};
       const len = metaV.n_children();
       
@@ -277,30 +267,20 @@ export class MprisManager {
         meta[key] = valueVariant;
       }
 
-      // Get additional properties
       const positionV = proxy.get_cached_property("Position");
       const shuffleV = proxy.get_cached_property("Shuffle");
       const loopStatusV = proxy.get_cached_property("LoopStatus");
 
-      // Extract values using helper functions (like the reference code)
       const lengthMicroseconds = getInt64(meta["mpris:length"]);
       const artUrl = getString(meta["mpris:artUrl"]);
-      
-      // Debug logging for artUrl
-      if (artUrl) {
-        log(`MediaControls: Got artUrl from MPRIS: ${artUrl}`);
-      } else {
-        log(`MediaControls: No artUrl in metadata for ${name}`);
-        // Log all metadata keys for debugging
-        const keys = Object.keys(meta);
-        log(`MediaControls: Available metadata keys: ${keys.join(", ")}`);
-      }
+      const trackId = getString(meta["mpris:trackid"]) || "/";
       
       return {
         title: getString(meta["xesam:title"]),
         artists: meta["xesam:artist"]?.deep_unpack() ?? null,
         album: getString(meta["xesam:album"]),
-        artUrl: artUrl, // Album art URL
+        artUrl: artUrl,
+        trackId: trackId,
         trackNumber: getInt32(meta["xesam:trackNumber"]),
         discNumber: getInt32(meta["xesam:discNumber"]),
         genres: meta["xesam:genre"]?.deep_unpack() ?? null,
@@ -327,7 +307,6 @@ export class MprisManager {
         require('gi://Gdk').Display.get_default()
       );
       
-      // Try desktop entry first
       const desktopEntry = this._desktopEntries.get(name);
       if (desktopEntry) {
         const iconNames = [
@@ -344,11 +323,9 @@ export class MprisManager {
         }
       }
 
-      // Fallback to bus name parsing
       let cleanName = name.replace(`${MPRIS_PREFIX}.`, "").toLowerCase();
       cleanName = cleanName.replace(/\.instance_\d+_\d+$/, "");
       
-      // Common app name mappings
       const appMappings = {
         'spotify': 'spotify',
         'vlc': 'vlc',
@@ -486,14 +463,12 @@ export class MprisManager {
   }
 
   destroy() {
-    // Unsubscribe from all signals
     if (this._bus) {
       for (const id of this._subscriptions) {
         this._bus.signal_unsubscribe(id);
       }
     }
 
-    // Clean up proxies
     for (const [name, proxy] of this._proxies) {
       try {
         GObject.signal_handlers_destroy(proxy);

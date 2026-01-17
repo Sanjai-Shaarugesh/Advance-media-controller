@@ -23,7 +23,13 @@
     <key name="show-track-name" type="b">
       <default>true</default>
       <summary>Show track name in panel</summary>
-      <description>Display scrolling track name next to the icon when playing</description>
+      <description>Display track name next to the icon when playing</description>
+    </key>
+    
+    <key name="enable-scroll" type="b">
+      <default>true</default>
+      <summary>Enable title scrolling</summary>
+      <description>Enable scrolling animation for long titles in the panel</description>
     </key>
     
     <key name="max-title-length" type="i">
@@ -56,6 +62,19 @@
       <default>true</default>
       <summary>Show on lock screen</summary>
       <description>Display media controls on the lock screen</description>
+    </key>
+    
+    <key name="auto-hide-popup" type="b">
+      <default>true</default>
+      <summary>Auto-hide popup on external click</summary>
+      <description>Automatically close the popup menu when clicking outside of it</description>
+    </key>
+    
+    <key name="popup-timeout" type="i">
+      <default>0</default>
+      <range min="0" max="60"/>
+      <summary>Popup auto-close timeout (seconds)</summary>
+      <description>Automatically close popup after this many seconds of inactivity (0 = disabled)</description>
     </key>
     
   </schema>

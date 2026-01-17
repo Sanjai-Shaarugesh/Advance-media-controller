@@ -23,9 +23,12 @@ export const MediaIndicator = GObject.registerClass(
       this._sessionModeId = 0;
       this._updateThrottle = null;
       this._capturedEventId = null;
+      this._windowFocusId = null;
+      this._overviewShowingId = null;
+      this._overviewHidingId = null;
       this._lastUpdateTime = 0;
 
-      // Create horizontal layout for icon and controls
+      // Create horizontal layout
       this._box = new St.BoxLayout({
         style_class: "panel-status-menu-box panel-button-box",
         style: "spacing: 4px;",
@@ -40,14 +43,13 @@ export const MediaIndicator = GObject.registerClass(
       });
       this._box.add_child(this._icon);
 
-      // Panel control buttons container
+      // Panel control buttons
       this._panelControlsBox = new St.BoxLayout({
         style_class: "panel-controls-box",
         style: "spacing: 2px;",
       });
       this._box.add_child(this._panelControlsBox);
 
-      // Previous button
       this._panelPrevBtn = this._createPanelButton("media-skip-backward-symbolic");
       this._panelPrevBtn.connect("button-press-event", (actor, event) => {
         if (event.get_button() === 1) {
@@ -58,7 +60,6 @@ export const MediaIndicator = GObject.registerClass(
       });
       this._panelControlsBox.add_child(this._panelPrevBtn);
 
-      // Play/Pause button
       this._panelPlayBtn = this._createPanelButton("media-playback-start-symbolic");
       this._panelPlayBtn.connect("button-press-event", (actor, event) => {
         if (event.get_button() === 1) {
@@ -69,7 +70,6 @@ export const MediaIndicator = GObject.registerClass(
       });
       this._panelControlsBox.add_child(this._panelPlayBtn);
 
-      // Next button
       this._panelNextBtn = this._createPanelButton("media-skip-forward-symbolic");
       this._panelNextBtn.connect("button-press-event", (actor, event) => {
         if (event.get_button() === 1) {
@@ -90,7 +90,7 @@ export const MediaIndicator = GObject.registerClass(
       this._box.add_child(this._label);
       this._label.hide();
 
-      // Media controls UI (popup)
+      // Media controls UI
       this._controls = new MediaControls();
       const item = new PopupMenu.PopupBaseMenuItem({
         reactive: false,
@@ -111,14 +111,14 @@ export const MediaIndicator = GObject.registerClass(
         this._updateUI();
       });
 
-      // Start/stop position updates when menu opens/closes
+      // Menu open/close handling
       this.menu.connect("open-state-changed", (menu, open) => {
         if (open) {
           this._controls.startPositionUpdate();
-          this._setupClickOutsideHandler();
+          this._setupWindowMonitoring();
         } else {
           this._controls.stopPositionUpdate();
-          this._removeClickOutsideHandler();
+          this._removeWindowMonitoring();
         }
       });
 
@@ -135,53 +135,92 @@ export const MediaIndicator = GObject.registerClass(
         }
       });
 
-      // Monitor session mode for lock screen
+      // Session mode monitoring
       this._sessionModeId = Main.sessionMode.connect("updated", () => {
         this._updateVisibility();
       });
 
-      // Initialize MPRIS manager
+      // Initialize MPRIS
       this._manager = new MprisManager();
       this._initManager();
 
-      // Initially hide until we have players
       this.hide();
     }
 
-    _setupClickOutsideHandler() {
-      if (this._capturedEventId) return;
+    _setupWindowMonitoring() {
+      this._removeWindowMonitoring();
 
+      // Monitor mouse clicks outside popup
       this._capturedEventId = global.stage.connect("button-press-event", (actor, event) => {
-        if (!this.menu.isOpen) {
-          return Clutter.EVENT_PROPAGATE;
-        }
+        if (!this.menu.isOpen) return Clutter.EVENT_PROPAGATE;
 
-        const clickedActor = global.stage.get_actor_at_pos(
-          Clutter.PickMode.ALL,
-          event.get_coords()[0],
-          event.get_coords()[1]
-        );
+        const [x, y] = event.get_coords();
+        const clickedActor = global.stage.get_actor_at_pos(Clutter.PickMode.ALL, x, y);
 
         if (this.menu.actor.contains(clickedActor) || this.contains(clickedActor)) {
           return Clutter.EVENT_PROPAGATE;
         }
 
         this.menu.close();
-        return Clutter.EVENT_PROPAGATE;
+        return Clutter.EVENT_STOP;
       });
+
+      // Monitor window focus changes
+      const windowTracker = global.display;
+      this._windowFocusId = windowTracker.connect("notify::focus-window", () => {
+        if (!this.menu.isOpen) return;
+
+        const focusedWindow = global.display.focus_window;
+        
+        // Close popup when any window gains focus
+        if (focusedWindow) {
+          this.menu.close();
+        }
+      });
+
+      // Monitor overview (Activities) showing
+      this._overviewShowingId = Main.overview.connect("showing", () => {
+        if (this.menu.isOpen) {
+          this.menu.close();
+        }
+      });
+
+      // Monitor other popups/modals
+      const layoutManager = Main.layoutManager;
+      if (layoutManager._isPopupWindowVisible) {
+        this._modalId = layoutManager.connect("modals-changed", () => {
+          if (this.menu.isOpen && layoutManager.modalCount > 0) {
+            this.menu.close();
+          }
+        });
+      }
     }
 
-    _removeClickOutsideHandler() {
+    _removeWindowMonitoring() {
       if (this._capturedEventId) {
         global.stage.disconnect(this._capturedEventId);
         this._capturedEventId = null;
+      }
+
+      if (this._windowFocusId) {
+        global.display.disconnect(this._windowFocusId);
+        this._windowFocusId = null;
+      }
+
+      if (this._overviewShowingId) {
+        Main.overview.disconnect(this._overviewShowingId);
+        this._overviewShowingId = null;
+      }
+
+      if (this._modalId) {
+        Main.layoutManager.disconnect(this._modalId);
+        this._modalId = null;
       }
     }
 
     _createPanelButton(iconName) {
       const button = new St.Button({
-        style_class: "panel-button",
-        style: "padding: 2px 4px; border-radius: 3px;",
+        style_class: "panel-media-button",
         can_focus: true,
         track_hover: true,
         reactive: true,
@@ -193,21 +232,10 @@ export const MediaIndicator = GObject.registerClass(
       });
 
       button.set_child(icon);
-
-      button.connect("enter-event", () => {
-        button.style = "padding: 2px 4px; border-radius: 3px; background-color: rgba(255,255,255,0.1);";
-      });
-
-      button.connect("leave-event", () => {
-        button.style = "padding: 2px 4px; border-radius: 3px;";
-      });
-
       return button;
     }
 
     _repositionIndicator() {
-      log("MediaControls: Repositioning indicator...");
-      
       const position = this._settings.get_string("panel-position");
       const index = this._settings.get_int("panel-index");
       
@@ -243,10 +271,8 @@ export const MediaIndicator = GObject.registerClass(
         if (wasVisible) {
           this.show();
         }
-        
-        log(`MediaControls: Repositioned to ${position}[${actualIndex}]`);
       } catch (e) {
-        logError(e, "MediaControls: Failed to reposition");
+        logError(e, "Failed to reposition");
       }
     }
 
@@ -277,7 +303,7 @@ export const MediaIndicator = GObject.registerClass(
           this._updateVisibility();
         }
       } catch (e) {
-        logError(e, "Failed to initialize MPRIS manager");
+        logError(e, "Failed to initialize MPRIS");
       }
     }
 
@@ -337,7 +363,6 @@ export const MediaIndicator = GObject.registerClass(
     _onPlayerChanged(name) {
       const now = GLib.get_monotonic_time();
       
-      // Throttle updates to max 20 FPS
       if (now - this._lastUpdateTime < 50000) {
         if (this._updateThrottle) {
           GLib.source_remove(this._updateThrottle);
@@ -532,7 +557,7 @@ export const MediaIndicator = GObject.registerClass(
     _onNext() {
       if (this._currentPlayer) {
         this._manager.next(this._currentPlayer).catch((e) => {
-          logError(e, "Failed to skip to next track");
+          logError(e, "Failed to skip next");
         });
       }
     }
@@ -540,7 +565,7 @@ export const MediaIndicator = GObject.registerClass(
     _onPrevious() {
       if (this._currentPlayer) {
         this._manager.previous(this._currentPlayer).catch((e) => {
-          logError(e, "Failed to skip to previous track");
+          logError(e, "Failed to skip previous");
         });
       }
     }
@@ -556,7 +581,7 @@ export const MediaIndicator = GObject.registerClass(
     _onRepeat() {
       if (this._currentPlayer) {
         this._manager.cycleLoopStatus(this._currentPlayer).catch((e) => {
-          logError(e, "Failed to cycle repeat mode");
+          logError(e, "Failed to cycle repeat");
         });
       }
     }
@@ -578,13 +603,13 @@ export const MediaIndicator = GObject.registerClass(
           logError(e, "Failed to seek");
         });
       } catch (e) {
-        logError(e, "Error during seek operation");
+        logError(e, "Error during seek");
       }
     }
 
     destroy() {
       this._stopScrolling();
-      this._removeClickOutsideHandler();
+      this._removeWindowMonitoring();
       
       if (this._updateThrottle) {
         GLib.source_remove(this._updateThrottle);

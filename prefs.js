@@ -45,6 +45,7 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     // Panel Index
     const indexRow = new Adw.SpinRow({
       title: "Panel Index",
+      subtitle: "Position within the panel area (-1 for automatic)",
       adjustment: new Gtk.Adjustment({
         lower: -1,
         upper: 20,
@@ -72,6 +73,7 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     // Show Track Name
     const showTrackRow = new Adw.SwitchRow({
       title: "Show Track Name",
+      subtitle: "Display track information in the panel",
     });
     
     settings.bind(
@@ -86,6 +88,7 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     // Show Artist
     const showArtistRow = new Adw.SwitchRow({
       title: "Show Artist Name",
+      subtitle: "Include artist name with track title",
     });
     
     settings.bind(
@@ -97,9 +100,25 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     
     displayGroup.add(showArtistRow);
 
+    // Enable Scroll
+    const enableScrollRow = new Adw.SwitchRow({
+      title: "Enable Title Scrolling",
+      subtitle: "Animate long titles with scrolling effect",
+    });
+    
+    settings.bind(
+      "enable-scroll",
+      enableScrollRow,
+      "active",
+      Gio.SettingsBindFlags.DEFAULT
+    );
+    
+    displayGroup.add(enableScrollRow);
+
     // Max Title Length
     const maxLengthRow = new Adw.SpinRow({
       title: "Maximum Title Length",
+      subtitle: "Characters to display before scrolling starts",
       adjustment: new Gtk.Adjustment({
         lower: 10,
         upper: 100,
@@ -120,6 +139,7 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     // Scroll Speed
     const scrollSpeedRow = new Adw.SpinRow({
       title: "Scroll Speed",
+      subtitle: "1 = slowest, 10 = fastest",
       adjustment: new Gtk.Adjustment({
         lower: 1,
         upper: 10,
@@ -140,20 +160,57 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     // Separator Text
     const separatorRow = new Adw.EntryRow({
       title: "Separator Text",
+      text: settings.get_string("separator-text"),
     });
-    separatorRow.show_apply_button = true;
-    
-    separatorRow.text = settings.get_string("separator-text");
     
     separatorRow.connect("apply", () => {
       settings.set_string("separator-text", separatorRow.text);
     });
     
-    separatorRow.connect("changed", () => {
-      settings.set_string("separator-text", separatorRow.text);
+    displayGroup.add(separatorRow);
+
+    // Popup Behavior Group
+    const popupGroup = new Adw.PreferencesGroup({
+      title: "Popup Behavior",
+      description: "Configure popup menu behavior",
+    });
+    generalPage.add(popupGroup);
+
+    // Auto-hide on external click
+    const autoHideRow = new Adw.SwitchRow({
+      title: "Auto-hide on External Click",
+      subtitle: "Close popup when clicking outside",
     });
     
-    displayGroup.add(separatorRow);
+    settings.bind(
+      "auto-hide-popup",
+      autoHideRow,
+      "active",
+      Gio.SettingsBindFlags.DEFAULT
+    );
+    
+    popupGroup.add(autoHideRow);
+
+    // Popup Timeout
+    const timeoutRow = new Adw.SpinRow({
+      title: "Auto-close Timeout",
+      subtitle: "Seconds before auto-closing (0 = disabled)",
+      adjustment: new Gtk.Adjustment({
+        lower: 0,
+        upper: 60,
+        step_increment: 5,
+        page_increment: 10,
+      }),
+    });
+    
+    settings.bind(
+      "popup-timeout",
+      timeoutRow,
+      "value",
+      Gio.SettingsBindFlags.DEFAULT
+    );
+    
+    popupGroup.add(timeoutRow);
 
     // Lock Screen Group
     const lockScreenGroup = new Adw.PreferencesGroup({
@@ -165,6 +222,7 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     // Show on Lock Screen
     const lockScreenRow = new Adw.SwitchRow({
       title: "Show on Lock Screen",
+      subtitle: "Display media controls when screen is locked",
     });
     
     settings.bind(
@@ -188,9 +246,10 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
 
     const aboutRow = new Adw.ActionRow({
       title: "Media Controls Extension",
+      subtitle: "Enhanced MPRIS media player controls for GNOME Shell",
     });
     aboutRow.add_suffix(new Gtk.Label({
-      label: "v2.1",
+      label: "v2.2",
       css_classes: ["dim-label"],
     }));
     
