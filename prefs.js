@@ -254,7 +254,7 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     githubRow.connect("activated", () => {
       try {
         Gio.AppInfo.launch_default_for_uri(
-          "https://github.com/yourusername/advanced-media-controller",
+          "https://github.com/Sanjai-Shaarugesh/Advance-media-controller",
           null
         );
       } catch (error) {

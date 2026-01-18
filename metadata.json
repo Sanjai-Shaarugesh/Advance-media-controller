@@ -1,6 +1,9 @@
 {
   "name": "Advanced Media Controller",
-  "description": "Beautiful and modern media controls with multi-instance support. Control your music players directly from the panel with album art, progress tracking, and smart tab switching for browser media.",
+ "description": "Control all your media players from one beautiful interface in your GNOME panel.\n- Play, pause, skip tracks, and see album art without opening apps.\n- Works great with Spotify, browsers, VLC, and more.\n- Handles multiple players gracefully with smart tab switching.",
+  "donations": {
+       "buymeacoffee": "sanjai"
+     },
   "uuid": "advanced-media-controller@sanjai.com",
   "shell-version": [
     "45",
