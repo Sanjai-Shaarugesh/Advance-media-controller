@@ -13,6 +13,7 @@ export const AlbumArt = GObject.registerClass(
       });
 
       this._coverCache = new Map();
+      this._currentArtUrl = null;
       this._buildUI();
     }
 
@@ -45,6 +46,13 @@ export const AlbumArt = GObject.registerClass(
     }
 
     loadCover(url, forceRefresh = false) {
+      // Don't reload if it's the same URL and not forced
+      if (!forceRefresh && this._currentArtUrl === url) {
+        return;
+      }
+      
+      this._currentArtUrl = url;
+
       if (!forceRefresh) {
         const cached = this._coverCache.get(url);
         if (cached) {
@@ -90,9 +98,16 @@ export const AlbumArt = GObject.registerClass(
       const cacheFile = Gio.File.new_for_path(cachePath);
 
       if (cacheFile.query_exists(null)) {
-        const gicon = new Gio.FileIcon({ file: cacheFile });
-        this._coverImage.gicon = gicon;
-        this._coverCache.set(url, gicon);
+        const coverStyle = `
+          border-radius: 16px;
+          background-image: url('file://${cachePath}');
+          background-size: contain;
+          background-position: center;
+          background-repeat: no-repeat;
+          min-height: 300px;
+        `;
+        this._coverImage.style = coverStyle;
+        this._coverCache.set(url, coverStyle);
         return;
       }
 
@@ -108,21 +123,39 @@ export const AlbumArt = GObject.registerClass(
         (src, res) => {
           try {
             src.copy_finish(res);
-            const gicon = new Gio.FileIcon({ file: cacheFile });
-            this._coverImage.gicon = gicon;
-            this._coverCache.set(url, gicon);
+            const coverStyle = `
+              border-radius: 16px;
+              background-image: url('file://${cachePath}');
+              background-size: contain;
+              background-position: center;
+              background-repeat: no-repeat;
+              min-height: 300px;
+            `;
+            this._coverImage.style = coverStyle;
+            this._coverCache.set(url, coverStyle);
           } catch (e) {}
         }
       );
     }
 
     setDefaultCover() {
+      this._currentArtUrl = null;
+      const defaultStyle = `
+        border-radius: 16px;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        min-height: 300px;
+      `;
+      this._coverImage.style = defaultStyle;
+      
       const gicon = Gio.icon_new_for_string("audio-x-generic-symbolic");
       this._coverImage.gicon = gicon;
     }
 
     destroy() {
       this._coverCache.clear();
+      this._currentArtUrl = null;
       super.destroy();
     }
   }
