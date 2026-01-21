@@ -1,10 +1,14 @@
+<div align="center">
+<img src="icons/media-logo.png" alt="icon" width="128">
+   
 # 🤝 Contributing to Advanced Media Controller
 
 Thanks for wanting to help make this extension better! 🎉
 
-![Welcome](icons/media-logo.png)
 
 ---
+
+</div>
 
 ## 🚀 Quick Start
 
