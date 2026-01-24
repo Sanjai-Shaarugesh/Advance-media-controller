@@ -10,7 +10,11 @@ export class IndicatorPlayerHandlers {
     
     try {
       const info = this._indicator._manager.getPlayerInfo(name);
-
+  
+      // START POSITION POLLING FOR THIS PLAYER
+      // This helps with Flatpak apps that don't emit Position changes
+      this._indicator._manager.startPositionPolling(name);
+  
       if (info && info.status === "Playing") {
         this._indicator._state._currentPlayer = name;
         this._indicator._uiUpdater.updateUI();
@@ -20,7 +24,7 @@ export class IndicatorPlayerHandlers {
         this._indicator._uiUpdater.updateUI();
         this._indicator._uiUpdater.updateVisibility();
       }
-
+  
       this._indicator._uiUpdater.updateTabs();
     } catch (e) {
       logError(e, "Error in _onPlayerAdded");
@@ -31,6 +35,9 @@ export class IndicatorPlayerHandlers {
     if (this._indicator._state._isDestroyed || this._indicator._state._sessionChanging) return;
     
     try {
+      // STOP POLLING FOR REMOVED PLAYER
+      this._indicator._manager.stopPositionPolling(name);
+      
       if (this._indicator._state._currentPlayer === name) {
         this._selectNextPlayer();
       }

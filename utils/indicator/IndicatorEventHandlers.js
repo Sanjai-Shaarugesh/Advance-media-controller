@@ -209,18 +209,39 @@ export class IndicatorEventHandlers {
 
   _onSeek(position) {
     if (this._indicator._state._isDestroyed || !this._indicator._state._currentPlayer || this._indicator._state._sessionChanging) return;
-
+  
     try {
       const proxy = this._indicator._manager._proxies.get(this._indicator._state._currentPlayer);
       if (!proxy) return;
-
+  
       const metadata = proxy.get_cached_property("Metadata");
       if (!metadata) return;
-
-      const meta = metadata.deep_unpack();
-      const trackId = meta["mpris:trackid"]?.unpack() || "/";
-
-      this._indicator._manager.setPosition(this._indicator._state._currentPlayer, trackId, position).catch((e) => {
+  
+      const meta = {};
+      const len = metadata.n_children();
+      
+      for (let i = 0; i < len; i++) {
+        try {
+          const item = metadata.get_child_value(i);
+          const key = item.get_child_value(0).get_string()[0];
+          const valueVariant = item.get_child_value(1).get_variant();
+          
+          if (key === "mpris:trackid") {
+            meta[key] = valueVariant.recursiveUnpack();
+            break;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+  
+      const trackId = meta["mpris:trackid"] || "/";
+  
+      this._indicator._manager.setPosition(
+        this._indicator._state._currentPlayer, 
+        trackId, 
+        position
+      ).catch((e) => {
         if (!this._indicator._state._isDestroyed) {
           logError(e, "Failed to seek");
         }

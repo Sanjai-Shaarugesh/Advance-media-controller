@@ -319,28 +319,30 @@ export class MprisPlayer {
     });
   }
 
+  // In MprisPlayer.js - Replace the getPlayerInfo method
+  
   getPlayerInfo(name) {
     if (this._manager._isDestroyed || this._manager._operationsPaused) return null;
     
     const proxy = this._manager._proxies.get(name);
     if (!proxy) return null;
-
+  
     try {
       const statusV = proxy.get_cached_property("PlaybackStatus");
       const status = statusV ? statusV.deep_unpack() : "Stopped";
-
+  
       if (status !== "Playing" && status !== "Paused" && status !== "Stopped") {
         return null;
       }
-
+  
       const metaV = proxy.get_cached_property("Metadata");
       if (!metaV) return null;
-
+  
       const meta = {};
       const len = metaV.n_children();
       
       if (!len) return null;
-
+  
       for (let i = 0; i < len; i++) {
         try {
           const item = metaV.get_child_value(i);
@@ -353,17 +355,40 @@ export class MprisPlayer {
           continue;
         }
       }
-
+  
       const positionV = proxy.get_cached_property("Position");
       const shuffleV = proxy.get_cached_property("Shuffle");
       const loopStatusV = proxy.get_cached_property("LoopStatus");
-
+  
       const lengthMicroseconds = MprisUtils.getInt64(meta["mpris:length"]);
       const artUrl = MprisUtils.getString(meta["mpris:artUrl"]);
       const trackId = MprisUtils.getString(meta["mpris:trackid"]) || "/";
       
+      // IMPROVED POSITION HANDLING FOR FLATPAK
+      let currentPosition = 0;
+      
+      // Try to get position from cached property first
+      if (positionV) {
+        try {
+          currentPosition = positionV.unpack();
+        } catch (e) {
+          // If unpack fails, try direct value
+          currentPosition = positionV.get_int64?.() || 0;
+        }
+      }
+      
+      // If we have a saved position and current is 0, use saved
       const savedPosition = this._manager._playerPositions.get(name);
-      const currentPosition = positionV ? positionV.unpack() : (savedPosition || 0);
+      if (currentPosition === 0 && savedPosition) {
+        currentPosition = savedPosition;
+      }
+      
+      // If still 0 and status is Playing, manually query position
+      if (currentPosition === 0 && status === "Playing") {
+        try {
+          this._queryPositionAsync(name);
+        } catch (e) {}
+      }
       
       return {
         title: MprisUtils.getString(meta["xesam:title"]),
@@ -385,6 +410,39 @@ export class MprisPlayer {
       this.handlePlayerError(name, e, "getPlayerInfo");
       return null;
     }
+  }
+  
+  // Add this new method to MprisPlayer class
+  _queryPositionAsync(name) {
+    if (this._manager._isDestroyed || this._manager._operationsPaused) return;
+    
+    this._manager._bus.call(
+      name,
+      MprisConstants.MPRIS_PATH,
+      "org.freedesktop.DBus.Properties",
+      "Get",
+      new GLib.Variant("(ss)", [MprisConstants.MPRIS_PLAYER_IFACE, "Position"]),
+      null,
+      Gio.DBusCallFlags.NONE,
+      1000, // Short timeout
+      null,
+      (conn, result) => {
+        if (this._manager._isDestroyed || this._manager._operationsPaused) return;
+        
+        try {
+          const reply = conn.call_finish(result);
+          const position = reply.deep_unpack()[0].unpack();
+          this._manager._playerPositions.set(name, position);
+          
+          // Trigger update
+          if (!this._manager._operationsPaused) {
+            this._manager._onPlayerChanged?.(name);
+          }
+        } catch (e) {
+          // Position query failed, player might not support it
+        }
+      }
+    );
   }
 
   getPlayerDisplayLabel(name) {

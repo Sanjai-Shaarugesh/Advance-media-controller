@@ -1,6 +1,9 @@
+// Replace ProgressSlider.js completely with this working version
+
 import St from "gi://St";
 import GObject from "gi://GObject";
 import GLib from "gi://GLib";
+import Gio from "gi://Gio";
 import Clutter from "gi://Clutter";
 import * as Slider from "resource:///org/gnome/shell/ui/slider.js";
 
@@ -24,9 +27,9 @@ export const ProgressSlider = GObject.registerClass(
       this._currentPosition = 0;
       this._trackLength = 0;
       this._isPlaying = false;
-      this._lastUpdateTime = 0;
-      this._ignoreNextUpdate = false;
-      this._justResumed = false;
+      this._playerName = null;
+      this._trackId = null;
+      this._canSeek = true;
 
       this._buildUI();
     }
@@ -47,22 +50,21 @@ export const ProgressSlider = GObject.registerClass(
 
       this._positionSlider.connect("drag-begin", () => {
         this._sliderDragging = true;
-        this._ignoreNextUpdate = true;
+        this.stopPositionUpdate();
         this.emit("drag-begin");
       });
 
       this._positionSlider.connect("drag-end", () => {
-        this._sliderDragging = false;
+        if (!this._sliderDragging) return;
         
+        this._sliderDragging = false;
         const newPosition = this._positionSlider.value * this._trackLength;
-        this._currentPosition = newPosition;
-        this._lastUpdateTime = GLib.get_monotonic_time();
         
         this.emit("seek", newPosition / 1000000);
         this.emit("drag-end");
         
-        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
-          this._ignoreNextUpdate = false;
+        // Resume updates after seek
+        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
           if (this._isPlaying) {
             this.startPositionUpdate();
           }
@@ -95,81 +97,90 @@ export const ProgressSlider = GObject.registerClass(
       this.add_child(timeBox);
     }
 
-    setPosition(position, length, value) {
-      this._currentPosition = position;
-      this._trackLength = length;
-      if (value !== undefined) {
-        this._positionSlider.value = value;
+    setPlayerName(name) {
+      this._playerName = name;
+    }
+
+    updatePlaybackState(isPlaying, metadata, status) {
+      this._isPlaying = isPlaying;
+      
+      if (metadata) {
+        this._trackLength = metadata['mpris:length'] || 0;
+        this._trackId = metadata['mpris:trackid'] || null;
+        
+        // Update total time label
+        this._totalTimeLabel.text = this._formatTime(this._trackLength / 1000000);
+        
+        // Check if track is seekable
+        if (!this._trackId || !this._trackLength) {
+          this._canSeek = false;
+          this._positionSlider.reactive = false;
+          this.visible = false;
+          return;
+        } else {
+          this._canSeek = true;
+          this._positionSlider.reactive = true;
+          this.visible = true;
+        }
+      }
+      
+      if (isPlaying) {
+        this.startPositionUpdate();
+      } else {
+        this.stopPositionUpdate();
       }
     }
 
-    updatePlaybackState(isPlaying, position, playerChanged) {
-      const wasPlaying = this._isPlaying;
-      const newPlayState = isPlaying;
-
-      if (!this._sliderDragging && !this._ignoreNextUpdate) {
-        const now = GLib.get_monotonic_time();
-        const justPaused = wasPlaying && !newPlayState;
-        const justResumed = !wasPlaying && newPlayState;
-        
-        if (justPaused) {
-          const elapsed = now - this._lastUpdateTime;
-          this._currentPosition = this._currentPosition + elapsed;
-          this._lastUpdateTime = now;
-          this._isPlaying = false;
-          this.stopPositionUpdate();
-        } else if (justResumed) {
-          this._lastUpdateTime = now;
-          this._isPlaying = true;
-          this._justResumed = true;
-          this.startPositionUpdate();
-          
-          GLib.timeout_add(GLib.PRIORITY_DEFAULT, 100, () => {
-            this._justResumed = false;
-            return GLib.SOURCE_REMOVE;
-          });
-        } else if (newPlayState && !this._justResumed && !playerChanged) {
-          const timeSinceUpdate = (now - this._lastUpdateTime) / 1000000;
-          
-          if (timeSinceUpdate > 2.0) {
-            const expectedPosition = this._currentPosition + (now - this._lastUpdateTime);
-            const drift = Math.abs(expectedPosition - position) / 1000000;
-            
-            if (drift > 2.0) {
-              this._currentPosition = position;
-              this._lastUpdateTime = now;
-            }
-          }
-          this._isPlaying = true;
-        } else if (!newPlayState && !justPaused) {
-          this._isPlaying = false;
-        }
-        
-        this._updateSliderPosition();
+    _syncGetProperty(busName, property) {
+      if (!busName) return null;
+      
+      try {
+        const result = Gio.DBus.session.call_sync(
+          busName,
+          "/org/mpris/MediaPlayer2",
+          "org.freedesktop.DBus.Properties",
+          "Get",
+          new GLib.Variant("(ss)", ["org.mpris.MediaPlayer2.Player", property]),
+          null,
+          Gio.DBusCallFlags.NONE,
+          50,
+          null
+        );
+        return result.recursiveUnpack()[0];
+      } catch (e) {
+        return null;
       }
     }
 
     _updateSliderPosition() {
-      if (this._sliderDragging || this._trackLength === 0) {
+      if (this._sliderDragging || !this._playerName || !this._trackLength) {
         return;
       }
 
-      let displayPosition = this._currentPosition;
+      try {
+        // Get current position directly from D-Bus
+        let position = this._syncGetProperty(this._playerName, "Position");
+        
+        if (position === null || position === 0) {
+          // Fallback: calculate based on playback
+          position = this._currentPosition;
+        } else {
+          this._currentPosition = position;
+        }
 
-      if (this._isPlaying && !this._justResumed) {
-        const now = GLib.get_monotonic_time();
-        const elapsed = now - this._lastUpdateTime;
-        displayPosition = this._currentPosition + elapsed;
+        // Ensure position is within bounds
+        position = Math.max(0, Math.min(position, this._trackLength));
+
+        // Update slider
+        this._positionSlider.block_signal_handler(this._sliderChangedId);
+        this._positionSlider.value = this._trackLength > 0 ? position / this._trackLength : 0;
+        this._positionSlider.unblock_signal_handler(this._sliderChangedId);
+
+        // Update time label
+        this._currentTimeLabel.text = this._formatTime(position / 1000000);
+      } catch (e) {
+        // If error, just continue with last known position
       }
-
-      displayPosition = Math.max(0, Math.min(displayPosition, this._trackLength));
-
-      this._positionSlider.block_signal_handler(this._sliderChangedId);
-      this._positionSlider.value = this._trackLength > 0 ? displayPosition / this._trackLength : 0;
-      this._positionSlider.unblock_signal_handler(this._sliderChangedId);
-
-      this._currentTimeLabel.text = this._formatTime(displayPosition / 1000000);
-      this._totalTimeLabel.text = this._formatTime(this._trackLength / 1000000);
     }
 
     _updateTimeLabel() {
@@ -191,8 +202,12 @@ export const ProgressSlider = GObject.registerClass(
     startPositionUpdate() {
       this.stopPositionUpdate();
       
-      this._updateInterval = GLib.timeout_add(GLib.PRIORITY_LOW, 100, () => {
-        if (!this._sliderDragging && !this._ignoreNextUpdate && this._isPlaying) {
+      // Update immediately
+      this._updateSliderPosition();
+      
+      // Then update every second like the reference code
+      this._updateInterval = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+        if (!this._sliderDragging && this._isPlaying) {
           this._updateSliderPosition();
         }
         return GLib.SOURCE_CONTINUE;
@@ -207,10 +222,7 @@ export const ProgressSlider = GObject.registerClass(
     }
 
     onSeeked(position) {
-      if (this._ignoreNextUpdate) return;
-      
       this._currentPosition = position;
-      this._lastUpdateTime = GLib.get_monotonic_time();
       
       if (!this._sliderDragging) {
         this._updateSliderPosition();

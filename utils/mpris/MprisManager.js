@@ -6,29 +6,106 @@ import { MprisConstants } from "./MprisConstants.js";
 
 export class MprisManager {
   constructor() {
-    this._bus = null;
-    this._proxies = new Map();
-    this._identities = new Map();
-    this._desktopEntries = new Map();
-    this._instanceMetadata = new Map();
-    this._playerPositions = new Map();
-    this._subscriptions = [];
-    this._onPlayerAdded = null;
-    this._onPlayerRemoved = null;
-    this._onPlayerChanged = null;
-    this._onSeeked = null;
-    this._isDestroyed = false;
-    this._proxySignals = new Map();
-    this._pendingProxies = new Set();
-    this._errorCounts = new Map();
-    this._maxErrorsPerPlayer = 10;
-    this._operationsPaused = false;
-    this._cleanupTimers = new Map();
-    this._proxyCleanupQueue = [];
-    this._cleanupInProgress = false;
+     this._bus = null;
+     this._proxies = new Map();
+     this._identities = new Map();
+     this._desktopEntries = new Map();
+     this._instanceMetadata = new Map();
+     this._playerPositions = new Map();
+     this._subscriptions = [];
+     this._onPlayerAdded = null;
+     this._onPlayerRemoved = null;
+     this._onPlayerChanged = null;
+     this._onSeeked = null;
+     this._isDestroyed = false;
+     this._proxySignals = new Map();
+     this._pendingProxies = new Set();
+     this._errorCounts = new Map();
+     this._maxErrorsPerPlayer = 10;
+     this._operationsPaused = false;
+     this._cleanupTimers = new Map();
+     this._proxyCleanupQueue = [];
+     this._cleanupInProgress = false;
+     
+     this._player = new MprisPlayer(this);
+   }
+  
+  // Add this new method to MprisManager
+  startPositionPolling(name) {
+    if (!name || this._pollingPlayers.has(name)) return;
     
-    this._player = new MprisPlayer(this);
+    this._pollingPlayers.add(name);
+    
+    // Start global polling if not already started
+    if (!this._positionPollingInterval) {
+      this._positionPollingInterval = GLib.timeout_add(GLib.PRIORITY_LOW, 1000, () => {
+        if (this._isDestroyed) return GLib.SOURCE_REMOVE;
+        
+        for (const playerName of this._pollingPlayers) {
+          this._pollPlayerPosition(playerName);
+        }
+        
+        return GLib.SOURCE_CONTINUE;
+      });
+    }
   }
+  
+  stopPositionPolling(name) {
+    this._pollingPlayers.delete(name);
+    
+    // Stop global polling if no players need it
+    if (this._pollingPlayers.size === 0 && this._positionPollingInterval) {
+      GLib.source_remove(this._positionPollingInterval);
+      this._positionPollingInterval = null;
+    }
+  }
+  
+  _pollPlayerPosition(name) {
+    if (this._isDestroyed || this._operationsPaused) return;
+    
+    const proxy = this._proxies.get(name);
+    if (!proxy) return;
+    
+    try {
+      const statusV = proxy.get_cached_property("PlaybackStatus");
+      const status = statusV ? statusV.deep_unpack() : "Stopped";
+      
+      // Only poll if playing
+      if (status !== "Playing") return;
+      
+      this._bus.call(
+        name,
+        MprisConstants.MPRIS_PATH,
+        "org.freedesktop.DBus.Properties",
+        "Get",
+        new GLib.Variant("(ss)", [MprisConstants.MPRIS_PLAYER_IFACE, "Position"]),
+        null,
+        Gio.DBusCallFlags.NONE,
+        1000,
+        null,
+        (conn, result) => {
+          if (this._isDestroyed || this._operationsPaused) return;
+          
+          try {
+            const reply = conn.call_finish(result);
+            const position = reply.deep_unpack()[0].unpack();
+            
+            const oldPosition = this._playerPositions.get(name) || 0;
+            
+            // Only update if position changed significantly (more than 0.5 seconds)
+            if (Math.abs(position - oldPosition) > 500000) {
+              this._playerPositions.set(name, position);
+              this._onPlayerChanged?.(name);
+            }
+          } catch (e) {
+            // Polling failed, stop polling this player
+            this.stopPositionPolling(name);
+          }
+        }
+      );
+    } catch (e) {}
+  }
+
 
   pauseOperations() {
     this._operationsPaused = true;
@@ -235,14 +312,34 @@ export class MprisManager {
   }
 
   setPosition(name, trackId, position) {
-    const positionUs = Math.floor(position * 1000000);
-    this._playerPositions.set(name, positionUs);
-    return this.callMethod(
-      name,
-      "SetPosition",
-      new GLib.Variant("(ox)", [trackId, positionUs])
-    );
-  }
+      const positionUs = Math.floor(position * 1000000);
+      this._playerPositions.set(name, positionUs);
+      
+      // Use string conversion for trackId like the reference code
+      const trackIdStr = trackId.toString();
+      
+      return new Promise((resolve, reject) => {
+        try {
+          this._bus.call_sync(
+            name,
+            "/org/mpris/MediaPlayer2",
+            "org.mpris.MediaPlayer2.Player",
+            "SetPosition",
+            new GLib.Variant("(ox)", [trackIdStr, positionUs]),
+            null,
+            Gio.DBusCallFlags.NONE,
+            50,
+            null
+          );
+          this._errorCounts.set(name, 0);
+          resolve();
+        } catch (e) {
+          this._player.handlePlayerError(name, e, "setPosition");
+          reject(e);
+        }
+      });
+    }
+
 
   toggleShuffle(name) {
     const info = this.getPlayerInfo(name);
@@ -272,6 +369,13 @@ export class MprisManager {
     this._isDestroyed = true;
     this._operationsPaused = true;
     
+    // STOP POSITION POLLING
+    if (this._positionPollingInterval) {
+      GLib.source_remove(this._positionPollingInterval);
+      this._positionPollingInterval = null;
+    }
+    this._pollingPlayers.clear();
+    
     for (const timerId of this._cleanupTimers.values()) {
       try {
         GLib.source_remove(timerId);
@@ -286,7 +390,7 @@ export class MprisManager {
         } catch (e) {}
       }
     }
-
+  
     const proxyNames = Array.from(this._proxies.keys());
     let cleanupIndex = 0;
     

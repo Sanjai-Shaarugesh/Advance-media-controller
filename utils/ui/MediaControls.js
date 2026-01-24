@@ -1,8 +1,8 @@
+// Replace MediaControls.js with this updated version
+
 import St from "gi://St";
 import GObject from "gi://GObject";
-import GLib from "gi://GLib";
 import Clutter from "gi://Clutter";
-import * as Slider from "resource:///org/gnome/shell/ui/slider.js";
 import { ControlButtons } from "./ControlButtons.js";
 import { AlbumArt } from "./AlbumArt.js";
 import { ProgressSlider } from "./ProgressSlider.js";
@@ -101,25 +101,15 @@ export const MediaControls = GObject.registerClass(
       if (!info) return;
 
       const playerChanged = this._currentPlayerName !== playerName;
-      const previousPlayer = this._currentPlayerName;
       this._currentPlayerName = playerName;
 
+      // Set player name in slider for D-Bus calls
+      this._progressSlider.setPlayerName(playerName);
+
+      // Get full metadata from manager
+      const metadata = this._getMetadata(playerName, manager);
+
       if (playerChanged) {
-        if (previousPlayer) {
-          this._playerSliderPositions.set(previousPlayer, {
-            position: this._progressSlider.currentPosition,
-            length: this._progressSlider.trackLength,
-            value: this._progressSlider.sliderValue
-          });
-        }
-
-        const savedState = this._playerSliderPositions.get(playerName);
-        if (savedState) {
-          this._progressSlider.setPosition(savedState.position, savedState.length, savedState.value);
-        } else {
-          this._progressSlider.setPosition(info.position || 0, info.length || 0, 0);
-        }
-
         const savedArt = this._playerArtCache.get(playerName);
         if (savedArt && savedArt === info.artUrl) {
           this._albumArt.loadCover(info.artUrl, true);
@@ -129,7 +119,6 @@ export const MediaControls = GObject.registerClass(
           this._albumArt.setDefaultCover();
         }
       } else {
-        this._progressSlider.trackLength = info.length;
         if (info.artUrl && this._playerArtCache.get(playerName) !== info.artUrl) {
           this._albumArt.loadCover(info.artUrl);
         }
@@ -147,7 +136,46 @@ export const MediaControls = GObject.registerClass(
       }
 
       this._controlButtons.updateButtons(info);
-      this._progressSlider.updatePlaybackState(info.status === "Playing", info.position, playerChanged);
+      
+      // Update slider with metadata and playback state
+      this._progressSlider.updatePlaybackState(
+        info.status === "Playing",
+        metadata,
+        info.status
+      );
+    }
+
+    _getMetadata(playerName, manager) {
+      if (!playerName || !manager) return null;
+      
+      try {
+        const proxy = manager._proxies.get(playerName);
+        if (!proxy) return null;
+
+        const metaV = proxy.get_cached_property("Metadata");
+        if (!metaV) return null;
+
+        const meta = {};
+        const len = metaV.n_children();
+        
+        for (let i = 0; i < len; i++) {
+          try {
+            const item = metaV.get_child_value(i);
+            const key = item.get_child_value(0).get_string()[0];
+            const valueVariant = item.get_child_value(1).get_variant();
+            
+            if (key) {
+              meta[key] = valueVariant ? valueVariant.recursiveUnpack() : null;
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+        
+        return meta;
+      } catch (e) {
+        return null;
+      }
     }
 
     updateTabs(players, currentPlayer, manager) {
