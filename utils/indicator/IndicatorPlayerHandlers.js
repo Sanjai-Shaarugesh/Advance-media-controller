@@ -6,15 +6,18 @@ export class IndicatorPlayerHandlers {
   }
 
   onPlayerAdded(name) {
-    if (this._indicator._state._isDestroyed || this._indicator._state._isInitializing || this._indicator._state._sessionChanging) return;
-    
+    if (
+      this._indicator._state._isDestroyed ||
+      this._indicator._state._isInitializing ||
+      this._indicator._state._sessionChanging
+    )
+      return;
+
     try {
       const info = this._indicator._manager.getPlayerInfo(name);
-  
-      // START POSITION POLLING FOR THIS PLAYER
-      // This helps with Flatpak apps that don't emit Position changes
+
       this._indicator._manager.startPositionPolling(name);
-  
+
       if (info && info.status === "Playing") {
         this._indicator._state._currentPlayer = name;
         this._indicator._uiUpdater.updateUI();
@@ -24,7 +27,7 @@ export class IndicatorPlayerHandlers {
         this._indicator._uiUpdater.updateUI();
         this._indicator._uiUpdater.updateVisibility();
       }
-  
+
       this._indicator._uiUpdater.updateTabs();
     } catch (e) {
       logError(e, "Error in _onPlayerAdded");
@@ -32,12 +35,15 @@ export class IndicatorPlayerHandlers {
   }
 
   onPlayerRemoved(name) {
-    if (this._indicator._state._isDestroyed || this._indicator._state._sessionChanging) return;
-    
+    if (
+      this._indicator._state._isDestroyed ||
+      this._indicator._state._sessionChanging
+    )
+      return;
+
     try {
-      // STOP POLLING FOR REMOVED PLAYER
       this._indicator._manager.stopPositionPolling(name);
-      
+
       if (this._indicator._state._currentPlayer === name) {
         this._selectNextPlayer();
       }
@@ -49,31 +55,48 @@ export class IndicatorPlayerHandlers {
   }
 
   onPlayerChanged(name) {
-    if (this._indicator._state._isDestroyed || this._indicator._state._isInitializing || this._indicator._state._sessionChanging) return;
-    
+    if (
+      this._indicator._state._isDestroyed ||
+      this._indicator._state._isInitializing ||
+      this._indicator._state._sessionChanging
+    )
+      return;
+
     const now = GLib.get_monotonic_time();
-    
+
     if (now - this._indicator._state._lastUpdateTime < 50000) {
       if (this._indicator._state._updateThrottle) {
         GLib.source_remove(this._indicator._state._updateThrottle);
       }
-      
-      this._indicator._state._updateThrottle = GLib.timeout_add(GLib.PRIORITY_LOW, 50, () => {
-        if (!this._indicator._state._isDestroyed && !this._indicator._state._sessionChanging) {
-          this._performUpdate(name);
-        }
-        this._indicator._state._updateThrottle = null;
-        return GLib.SOURCE_REMOVE;
-      });
+
+      this._indicator._state._updateThrottle = GLib.timeout_add(
+        GLib.PRIORITY_LOW,
+        50,
+        () => {
+          if (
+            !this._indicator._state._isDestroyed &&
+            !this._indicator._state._sessionChanging
+          ) {
+            this._performUpdate(name);
+          }
+          this._indicator._state._updateThrottle = null;
+          return GLib.SOURCE_REMOVE;
+        },
+      );
       return;
     }
-    
+
     this._performUpdate(name);
   }
 
   _performUpdate(name) {
-    if (this._indicator._state._isDestroyed || this._indicator._state._isInitializing || this._indicator._state._sessionChanging) return;
-    
+    if (
+      this._indicator._state._isDestroyed ||
+      this._indicator._state._isInitializing ||
+      this._indicator._state._sessionChanging
+    )
+      return;
+
     try {
       this._indicator._state._lastUpdateTime = GLib.get_monotonic_time();
       const info = this._indicator._manager.getPlayerInfo(name);
@@ -81,9 +104,13 @@ export class IndicatorPlayerHandlers {
       if (this._indicator._state._currentPlayer === name) {
         this._indicator._uiUpdater.updateUI();
         this._indicator._uiUpdater.updateVisibility();
-        
+
         if (this._indicator.menu.isOpen && this._indicator._controls) {
-          this._indicator._controls.update(info, name, this._indicator._manager);
+          this._indicator._controls.update(
+            info,
+            name,
+            this._indicator._manager,
+          );
         }
       } else if (info && info.status === "Playing") {
         this._indicator._state._currentPlayer = name;
@@ -97,8 +124,13 @@ export class IndicatorPlayerHandlers {
   }
 
   onSeeked(name, position) {
-    if (this._indicator._state._isDestroyed || this._indicator._state._currentPlayer !== name || this._indicator._state._sessionChanging) return;
-    
+    if (
+      this._indicator._state._isDestroyed ||
+      this._indicator._state._currentPlayer !== name ||
+      this._indicator._state._sessionChanging
+    )
+      return;
+
     try {
       this._indicator._controls.onSeeked(position);
     } catch (e) {
@@ -107,8 +139,12 @@ export class IndicatorPlayerHandlers {
   }
 
   _selectNextPlayer() {
-    if (this._indicator._state._isDestroyed || this._indicator._state._sessionChanging) return;
-    
+    if (
+      this._indicator._state._isDestroyed ||
+      this._indicator._state._sessionChanging
+    )
+      return;
+
     try {
       const players = this._indicator._manager.getPlayers();
 

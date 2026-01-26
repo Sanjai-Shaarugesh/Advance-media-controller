@@ -1,15 +1,17 @@
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { MediaIndicator } from "./utils/indicator.js";
+import { initTranslations, gettext as _ } from "./utils/locale.js";
 
 export default class MediaExtension extends Extension {
   enable() {
     log("Media Controls Extension Enabled");
 
+    // Initialize translations
+    initTranslations(this);
+
     this._settings = this.getSettings();
-
     this._indicator = new MediaIndicator(this._settings);
-
     this._addToPanel();
 
     this._sessionModeChangedId = Main.sessionMode.connect("updated", () => {

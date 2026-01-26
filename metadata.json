@@ -12,7 +12,7 @@
     "48",
     "49"
   ],
-  "version": 2,
+  "version": 4,
   "url": "https://github.com/Sanjai-Shaarugesh/Advance-media-controller",
   "settings-schema": "org.gnome.shell.extensions.advanced-media-controller",
   "gettext-domain": "advanced-media-controller"

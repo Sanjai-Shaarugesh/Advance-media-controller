@@ -10,14 +10,12 @@ export class PanelUI {
   }
 
   _buildUI() {
-    // Create horizontal layout
     this._box = new St.BoxLayout({
       style_class: "panel-status-menu-box panel-button-box",
       style: "spacing: 6px;",
     });
     this._indicator.add_child(this._box);
 
-    // Panel app icon
     this._icon = new St.Icon({
       icon_size: 18,
       y_align: Clutter.ActorAlign.CENTER,
@@ -25,23 +23,25 @@ export class PanelUI {
     this._icon.set_fallback_gicon(null);
     this._box.add_child(this._icon);
 
-    // Panel control buttons
     this._panelControlsBox = new St.BoxLayout({
       style_class: "panel-controls-box",
       style: "spacing: 2px;",
     });
     this._box.add_child(this._panelControlsBox);
 
-    this._panelPrevBtn = this._createPanelButton("media-skip-backward-symbolic");
+    this._panelPrevBtn = this._createPanelButton(
+      "media-skip-backward-symbolic",
+    );
     this._panelControlsBox.add_child(this._panelPrevBtn);
 
-    this._panelPlayBtn = this._createPanelButton("media-playback-start-symbolic");
+    this._panelPlayBtn = this._createPanelButton(
+      "media-playback-start-symbolic",
+    );
     this._panelControlsBox.add_child(this._panelPlayBtn);
 
     this._panelNextBtn = this._createPanelButton("media-skip-forward-symbolic");
     this._panelControlsBox.add_child(this._panelNextBtn);
 
-    // Scrolling label
     this._label = new St.Label({
       text: "",
       y_align: Clutter.ActorAlign.CENTER,
@@ -69,12 +69,24 @@ export class PanelUI {
     return button;
   }
 
-  get box() { return this._box; }
-  get icon() { return this._icon; }
-  get panelPrevBtn() { return this._panelPrevBtn; }
-  get panelPlayBtn() { return this._panelPlayBtn; }
-  get panelNextBtn() { return this._panelNextBtn; }
-  get label() { return this._label; }
+  get box() {
+    return this._box;
+  }
+  get icon() {
+    return this._icon;
+  }
+  get panelPrevBtn() {
+    return this._panelPrevBtn;
+  }
+  get panelPlayBtn() {
+    return this._panelPlayBtn;
+  }
+  get panelNextBtn() {
+    return this._panelNextBtn;
+  }
+  get label() {
+    return this._label;
+  }
 
   startScrolling(fullText, settings) {
     this.stopScrolling();
@@ -82,29 +94,36 @@ export class PanelUI {
     try {
       const maxLength = settings.get_int("max-title-length");
       const scrollSpeed = settings.get_int("scroll-speed");
-      
+
       const paddedText = fullText + "   •   ";
       const interval = Math.max(50, 300 - scrollSpeed * 25);
 
-      this._indicator._state._scrollTimeout = GLib.timeout_add(GLib.PRIORITY_LOW, interval, () => {
-        if (this._indicator._state._isDestroyed || this._indicator._state._sessionChanging) {
-          return GLib.SOURCE_REMOVE;
-        }
-        
-        this._indicator._state._scrollPosition++;
+      this._indicator._state._scrollTimeout = GLib.timeout_add(
+        GLib.PRIORITY_LOW,
+        interval,
+        () => {
+          if (
+            this._indicator._state._isDestroyed ||
+            this._indicator._state._sessionChanging
+          ) {
+            return GLib.SOURCE_REMOVE;
+          }
 
-        if (this._indicator._state._scrollPosition >= paddedText.length) {
-          this._indicator._state._scrollPosition = 0;
-        }
+          this._indicator._state._scrollPosition++;
 
-        const displayText =
-          paddedText.substring(this._indicator._state._scrollPosition) +
-          paddedText.substring(0, this._indicator._state._scrollPosition);
+          if (this._indicator._state._scrollPosition >= paddedText.length) {
+            this._indicator._state._scrollPosition = 0;
+          }
 
-        this._label.text = displayText.substring(0, maxLength);
+          const displayText =
+            paddedText.substring(this._indicator._state._scrollPosition) +
+            paddedText.substring(0, this._indicator._state._scrollPosition);
 
-        return GLib.SOURCE_CONTINUE;
-      });
+          this._label.text = displayText.substring(0, maxLength);
+
+          return GLib.SOURCE_CONTINUE;
+        },
+      );
     } catch (e) {
       logError(e, "Error in _startScrolling");
     }
@@ -121,11 +140,17 @@ export class PanelUI {
   }
 
   updateAppIcon(manager, currentPlayer) {
-    if (this._indicator._state._isDestroyed || this._indicator._state._sessionChanging) return;
-    
+    if (
+      this._indicator._state._isDestroyed ||
+      this._indicator._state._sessionChanging
+    )
+      return;
+
     try {
       if (!currentPlayer) {
-        this._icon.set_gicon(Gio.icon_new_for_string("audio-x-generic-symbolic"));
+        this._icon.set_gicon(
+          Gio.icon_new_for_string("audio-x-generic-symbolic"),
+        );
         return;
       }
 
@@ -133,7 +158,9 @@ export class PanelUI {
       if (appInfo && appInfo.get_icon()) {
         this._icon.set_gicon(appInfo.get_icon());
       } else {
-        this._icon.set_gicon(Gio.icon_new_for_string("audio-x-generic-symbolic"));
+        this._icon.set_gicon(
+          Gio.icon_new_for_string("audio-x-generic-symbolic"),
+        );
       }
     } catch (e) {
       this._icon.set_gicon(Gio.icon_new_for_string("audio-x-generic-symbolic"));

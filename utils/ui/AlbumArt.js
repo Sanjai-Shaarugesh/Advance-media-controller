@@ -21,8 +21,8 @@ export const AlbumArt = GObject.registerClass(
       this._coverArt = new St.Bin({
         style_class: "media-album-art",
         style: `
-          width: 300px; 
-          height: 300px; 
+          width: 300px;
+          height: 300px;
           border-radius: 16px;
           box-shadow: 0 8px 24px rgba(0,0,0,0.4);
           background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
@@ -40,17 +40,16 @@ export const AlbumArt = GObject.registerClass(
           min-height: 300px;
         `,
       });
-      
+
       this._coverArt.set_child(this._coverImage);
       this.add_child(this._coverArt);
     }
 
     loadCover(url, forceRefresh = false) {
-      // Don't reload if it's the same URL and not forced
       if (!forceRefresh && this._currentArtUrl === url) {
         return;
       }
-      
+
       this._currentArtUrl = url;
 
       if (!forceRefresh) {
@@ -63,7 +62,7 @@ export const AlbumArt = GObject.registerClass(
 
       try {
         let imageUrl = url;
-        
+
         if (url.startsWith("file://")) {
           imageUrl = url;
         } else if (url.startsWith("http://") || url.startsWith("https://")) {
@@ -72,7 +71,7 @@ export const AlbumArt = GObject.registerClass(
         } else {
           imageUrl = `file://${url}`;
         }
-        
+
         const coverStyle = `
           border-radius: 16px;
           background-image: url('${imageUrl}');
@@ -81,18 +80,24 @@ export const AlbumArt = GObject.registerClass(
           background-repeat: no-repeat;
           min-height: 300px;
         `;
-        
+
         this._coverImage.style = coverStyle;
         this._coverCache.set(url, coverStyle);
-        
       } catch (e) {
         this.setDefaultCover();
       }
     }
 
     _downloadCover(url) {
-      const hash = GLib.compute_checksum_for_string(GLib.ChecksumType.MD5, url, -1);
-      const cacheDir = GLib.build_filenamev([GLib.get_user_cache_dir(), "mpris-covers"]);
+      const hash = GLib.compute_checksum_for_string(
+        GLib.ChecksumType.MD5,
+        url,
+        -1,
+      );
+      const cacheDir = GLib.build_filenamev([
+        GLib.get_user_cache_dir(),
+        "mpris-covers",
+      ]);
       GLib.mkdir_with_parents(cacheDir, 0o755);
       const cachePath = GLib.build_filenamev([cacheDir, hash]);
       const cacheFile = Gio.File.new_for_path(cachePath);
@@ -134,7 +139,7 @@ export const AlbumArt = GObject.registerClass(
             this._coverImage.style = coverStyle;
             this._coverCache.set(url, coverStyle);
           } catch (e) {}
-        }
+        },
       );
     }
 
@@ -148,7 +153,7 @@ export const AlbumArt = GObject.registerClass(
         min-height: 300px;
       `;
       this._coverImage.style = defaultStyle;
-      
+
       const gicon = Gio.icon_new_for_string("audio-x-generic-symbolic");
       this._coverImage.gicon = gicon;
     }
@@ -158,5 +163,5 @@ export const AlbumArt = GObject.registerClass(
       this._currentArtUrl = null;
       super.destroy();
     }
-  }
+  },
 );

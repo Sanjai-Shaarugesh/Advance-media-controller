@@ -6,10 +6,10 @@ export const ControlButtons = GObject.registerClass(
   {
     Signals: {
       "play-pause": {},
-      "next": {},
-      "previous": {},
-      "shuffle": {},
-      "repeat": {},
+      next: {},
+      previous: {},
+      shuffle: {},
+      repeat: {},
     },
   },
   class ControlButtons extends St.BoxLayout {
@@ -23,19 +23,34 @@ export const ControlButtons = GObject.registerClass(
     }
 
     _buildUI() {
-      this._shuffleBtn = this._createModernButton("media-playlist-shuffle-symbolic", 18);
+      this._shuffleBtn = this._createModernButton(
+        "media-playlist-shuffle-symbolic",
+        18,
+      );
       this._shuffleBtn.connect("clicked", () => this.emit("shuffle"));
 
-      this._prevBtn = this._createModernButton("media-skip-backward-symbolic", 20);
+      this._prevBtn = this._createModernButton(
+        "media-skip-backward-symbolic",
+        20,
+      );
       this._prevBtn.connect("clicked", () => this.emit("previous"));
 
-      this._playBtn = this._createPlayButton("media-playback-start-symbolic", 26);
+      this._playBtn = this._createPlayButton(
+        "media-playback-start-symbolic",
+        26,
+      );
       this._playBtn.connect("clicked", () => this.emit("play-pause"));
 
-      this._nextBtn = this._createModernButton("media-skip-forward-symbolic", 20);
+      this._nextBtn = this._createModernButton(
+        "media-skip-forward-symbolic",
+        20,
+      );
       this._nextBtn.connect("clicked", () => this.emit("next"));
 
-      this._repeatBtn = this._createModernButton("media-playlist-repeat-symbolic", 18);
+      this._repeatBtn = this._createModernButton(
+        "media-playlist-repeat-symbolic",
+        18,
+      );
       this._repeatBtn.connect("clicked", () => this.emit("repeat"));
 
       this.add_child(this._shuffleBtn);
@@ -120,12 +135,12 @@ export const ControlButtons = GObject.registerClass(
     }
 
     updateButtons(info) {
-      const playIcon = info.status === "Playing" 
-        ? "media-playback-pause-symbolic" 
-        : "media-playback-start-symbolic";
+      const playIcon =
+        info.status === "Playing"
+          ? "media-playback-pause-symbolic"
+          : "media-playback-start-symbolic";
       this._playBtn.child.icon_name = playIcon;
 
-      // Update shuffle button
       if (info.shuffle) {
         this._shuffleBtn.add_style_class_name("active");
         this._shuffleBtn.style = `
@@ -144,7 +159,6 @@ export const ControlButtons = GObject.registerClass(
         this._shuffleBtn.child.style = "color: rgba(255,255,255,0.9);";
       }
 
-      // Update repeat button
       if (info.loopStatus === "Track") {
         this._repeatBtn.child.icon_name = "media-playlist-repeat-song-symbolic";
         this._repeatBtn.add_style_class_name("active");
@@ -174,5 +188,5 @@ export const ControlButtons = GObject.registerClass(
         this._repeatBtn.child.style = "color: rgba(255,255,255,0.9);";
       }
     }
-  }
+  },
 );

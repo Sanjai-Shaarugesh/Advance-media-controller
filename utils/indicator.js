@@ -1,5 +1,4 @@
 import GObject from "gi://GObject";
-import St from "gi://St";
 import GLib from "gi://GLib";
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
@@ -19,17 +18,14 @@ export const MediaIndicator = GObject.registerClass(
 
       this._settings = settings;
       this._state = new IndicatorState();
-      
-      // Create UI components
+
       this._panelUI = new PanelUI(this);
       this._controls = new MediaControls();
-      
-      // Create helper instances
+
       this._eventHandlers = new IndicatorEventHandlers(this);
       this._playerHandlers = new IndicatorPlayerHandlers(this);
       this._uiUpdater = new IndicatorUIUpdater(this);
 
-      // Setup popup menu
       const item = new PopupMenu.PopupBaseMenuItem({
         reactive: false,
         can_focus: false,
@@ -37,10 +33,8 @@ export const MediaIndicator = GObject.registerClass(
       item.add_child(this._controls);
       this.menu.addMenuItem(item);
 
-      // Connect control signals
       this._eventHandlers.connectControlSignals();
 
-      // Menu open/close handling
       this.menu.connect("open-state-changed", (menu, open) => {
         this._state.safeExecute(() => {
           if (open) {
@@ -53,42 +47,42 @@ export const MediaIndicator = GObject.registerClass(
         });
       });
 
-      // Settings bindings
-      this._state._settingsChangedId = this._settings.connect("changed", (_, key) => {
-        this._state.safeExecute(() => {
-          if (key === "panel-position" || key === "panel-index") {
-            this._state.scheduleOperation(() => this._repositionIndicator());
-          } else {
-            this._uiUpdater.updateLabel();
-            this._uiUpdater.updateVisibility();
-          }
-        });
-      });
+      this._state._settingsChangedId = this._settings.connect(
+        "changed",
+        (_, key) => {
+          this._state.safeExecute(() => {
+            if (key === "panel-position" || key === "panel-index") {
+              this._state.scheduleOperation(() => this._repositionIndicator());
+            } else {
+              this._uiUpdater.updateLabel();
+              this._uiUpdater.updateVisibility();
+            }
+          });
+        },
+      );
 
-      // Session mode monitoring
       this._eventHandlers.setupSessionMonitoring();
 
       this.hide();
 
-      // Initialize MPRIS with delay
       this._state.scheduleOperation(() => this._initManager(), 200);
     }
 
     _repositionIndicator() {
       if (this._state._isDestroyed || this._state._sessionChanging) return;
-      
+
       const position = this._settings.get_string("panel-position");
       const index = this._settings.get_int("panel-index");
-      
+
       const wasVisible = this.visible;
       const manager = this._manager;
       const player = this._state._currentPlayer;
-      
+
       try {
         if (this.container && this.container.get_parent()) {
           this.container.get_parent().remove_child(this.container);
         }
-        
+
         let targetBox;
         switch (position) {
           case "left":
@@ -102,14 +96,19 @@ export const MediaIndicator = GObject.registerClass(
             targetBox = Main.panel._rightBox;
             break;
         }
-        
-        const actualIndex = index === -1 ? 0 : Math.min(index, targetBox.get_n_children());
+
+        const actualIndex =
+          index === -1 ? 0 : Math.min(index, targetBox.get_n_children());
         targetBox.insert_child_at_index(this.container, actualIndex);
-        
+
         this._manager = manager;
         this._state._currentPlayer = player;
-        
-        if (wasVisible && !this._state._isDestroyed && !this._state._sessionChanging) {
+
+        if (
+          wasVisible &&
+          !this._state._isDestroyed &&
+          !this._state._sessionChanging
+        ) {
           this.show();
         }
       } catch (e) {
@@ -119,15 +118,27 @@ export const MediaIndicator = GObject.registerClass(
 
     async _initManager() {
       if (this._state._isDestroyed) return;
-      
+
       try {
         this._manager = new MprisManager();
-        
+
         await this._manager.init({
-          added: (name) => this._state.safeExecute(() => this._playerHandlers.onPlayerAdded(name)),
-          removed: (name) => this._state.safeExecute(() => this._playerHandlers.onPlayerRemoved(name)),
-          changed: (name) => this._state.safeExecute(() => this._playerHandlers.onPlayerChanged(name)),
-          seeked: (name, position) => this._state.safeExecute(() => this._playerHandlers.onSeeked(name, position)),
+          added: (name) =>
+            this._state.safeExecute(() =>
+              this._playerHandlers.onPlayerAdded(name),
+            ),
+          removed: (name) =>
+            this._state.safeExecute(() =>
+              this._playerHandlers.onPlayerRemoved(name),
+            ),
+          changed: (name) =>
+            this._state.safeExecute(() =>
+              this._playerHandlers.onPlayerChanged(name),
+            ),
+          seeked: (name, position) =>
+            this._state.safeExecute(() =>
+              this._playerHandlers.onSeeked(name, position),
+            ),
         });
 
         if (this._state._isDestroyed) return;
@@ -143,15 +154,15 @@ export const MediaIndicator = GObject.registerClass(
               break;
             }
           }
-          
+
           if (!this._state._currentPlayer) {
             this._state._currentPlayer = players[0];
           }
-          
+
           this._uiUpdater.updateUI();
           this._uiUpdater.updateVisibility();
         }
-        
+
         this._state._isInitializing = false;
       } catch (e) {
         logError(e, "Failed to initialize MPRIS");
@@ -166,25 +177,24 @@ export const MediaIndicator = GObject.registerClass(
       this._state._sessionChanging = true;
       this._state._safetyLock = true;
       this._state._preventLogout = true;
-      
-      // Cancel all pending operations
+
       for (const id of this._state._pendingOperations) {
         try {
           GLib.source_remove(id);
         } catch (e) {}
       }
       this._state._pendingOperations.clear();
-      
+
       this._panelUI.stopScrolling();
       this._eventHandlers.removeWindowMonitoring();
-      
+
       if (this._state._updateThrottle) {
         try {
           GLib.source_remove(this._state._updateThrottle);
         } catch (e) {}
         this._state._updateThrottle = null;
       }
-      
+
       if (this._state._settingsChangedId) {
         try {
           this._settings.disconnect(this._state._settingsChangedId);
@@ -222,5 +232,5 @@ export const MediaIndicator = GObject.registerClass(
         super.destroy();
       } catch (e) {}
     }
-  }
+  },
 );

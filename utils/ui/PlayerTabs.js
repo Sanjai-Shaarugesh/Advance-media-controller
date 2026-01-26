@@ -26,7 +26,7 @@ export const PlayerTabs = GObject.registerClass(
 
     _createTab(appInfo, playerName, currentPlayer) {
       const isActive = playerName === currentPlayer;
-      
+
       const button = new St.Button({
         style_class: "media-tab-modern",
         style: isActive
@@ -46,7 +46,7 @@ export const PlayerTabs = GObject.registerClass(
           icon_size: 20,
         });
       }
-      
+
       button.set_child(icon);
 
       button.connect("clicked", () => {
@@ -67,5 +67,5 @@ export const PlayerTabs = GObject.registerClass(
 
       return button;
     }
-  }
+  },
 );
