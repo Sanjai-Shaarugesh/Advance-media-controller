@@ -10,14 +10,12 @@ export class PanelUI {
   }
 
   _buildUI() {
-    // Create horizontal layout
     this._box = new St.BoxLayout({
       style_class: "panel-status-menu-box panel-button-box",
       style: "spacing: 6px;",
     });
     this._indicator.add_child(this._box);
 
-    // Panel app icon
     this._icon = new St.Icon({
       icon_size: 18,
       y_align: Clutter.ActorAlign.CENTER,
@@ -25,7 +23,6 @@ export class PanelUI {
     this._icon.set_fallback_gicon(null);
     this._box.add_child(this._icon);
 
-    // Panel control buttons
     this._panelControlsBox = new St.BoxLayout({
       style_class: "panel-controls-box",
       style: "spacing: 2px;",
@@ -41,7 +38,6 @@ export class PanelUI {
     this._panelNextBtn = this._createPanelButton("media-skip-forward-symbolic");
     this._panelControlsBox.add_child(this._panelNextBtn);
 
-    // Scrolling label
     this._label = new St.Label({
       text: "",
       y_align: Clutter.ActorAlign.CENTER,
@@ -82,7 +78,6 @@ export class PanelUI {
     try {
       const maxLength = settings.get_int("max-title-length");
       const scrollSpeed = settings.get_int("scroll-speed");
-      
       const paddedText = fullText + "   •   ";
       const interval = Math.max(50, 300 - scrollSpeed * 25);
 
@@ -90,23 +85,22 @@ export class PanelUI {
         if (this._indicator._state._isDestroyed || this._indicator._state._sessionChanging) {
           return GLib.SOURCE_REMOVE;
         }
-        
+
         this._indicator._state._scrollPosition++;
 
         if (this._indicator._state._scrollPosition >= paddedText.length) {
           this._indicator._state._scrollPosition = 0;
         }
 
-        const displayText =
-          paddedText.substring(this._indicator._state._scrollPosition) +
-          paddedText.substring(0, this._indicator._state._scrollPosition);
+        const displayText = paddedText.substring(this._indicator._state._scrollPosition) +
+                          paddedText.substring(0, this._indicator._state._scrollPosition);
 
         this._label.text = displayText.substring(0, maxLength);
 
         return GLib.SOURCE_CONTINUE;
       });
     } catch (e) {
-      logError(e, "Error in _startScrolling");
+      logError(e, "Error in scrolling");
     }
   }
 
@@ -121,8 +115,9 @@ export class PanelUI {
   }
 
   updateAppIcon(manager, currentPlayer) {
-    if (this._indicator._state._isDestroyed || this._indicator._state._sessionChanging) return;
-    
+    if (this._indicator._state._isDestroyed || this._indicator._state._sessionChanging)
+      return;
+
     try {
       if (!currentPlayer) {
         this._icon.set_gicon(Gio.icon_new_for_string("audio-x-generic-symbolic"));

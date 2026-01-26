@@ -1,0 +1,215 @@
+# French translation for Advanced Media Controller
+# Copyright (C) 2025
+# This file is distributed under the same license as the Advanced Media Controller package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Advanced Media Controller 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-26 12:00+0000\n"
+"PO-Revision-Date: 2025-01-26 12:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: French\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "No media playing"
+msgstr "Aucun média en lecture"
+
+msgid "Unknown"
+msgstr "Inconnu"
+
+msgid "Media Controls"
+msgstr "Contrôles Multimédias"
+
+msgid "General"
+msgstr "Général"
+
+msgid "Panel Settings"
+msgstr "Paramètres du Panneau"
+
+msgid "Configure the position and appearance in the top panel"
+msgstr "Configurez la position et l'apparence dans le panneau supérieur"
+
+msgid "Panel Position"
+msgstr "Position du Panneau"
+
+msgid "Left"
+msgstr "Gauche"
+
+msgid "Center"
+msgstr "Centre"
+
+msgid "Right"
+msgstr "Droite"
+
+msgid "Panel Index"
+msgstr "Index du Panneau"
+
+msgid "Position within the panel area (-1 for automatic)"
+msgstr "Position dans la zone du panneau (-1 pour automatique)"
+
+msgid "Display Settings"
+msgstr "Paramètres d'Affichage"
+
+msgid "Configure what appears in the panel"
+msgstr "Configurez ce qui apparaît dans le panneau"
+
+msgid "Show Track Name"
+msgstr "Afficher le Nom du Morceau"
+
+msgid "Display track information in the panel"
+msgstr "Afficher les informations du morceau dans le panneau"
+
+msgid "Show Artist Name"
+msgstr "Afficher le Nom de l'Artiste"
+
+msgid "Include artist name with track title"
+msgstr "Inclure le nom de l'artiste avec le titre du morceau"
+
+msgid "Maximum Title Length"
+msgstr "Longueur Maximale du Titre"
+
+msgid "Characters to display before scrolling starts"
+msgstr "Caractères à afficher avant le début du défilement"
+
+msgid "Scroll Speed"
+msgstr "Vitesse de Défilement"
+
+msgid "1 = slowest, 10 = fastest"
+msgstr "1 = le plus lent, 10 = le plus rapide"
+
+msgid "Separator Text"
+msgstr "Texte Séparateur"
+
+msgid "About"
+msgstr "À propos"
+
+msgid "Advanced Media Controller"
+msgstr "Contrôleur Multimédia Avancé"
+
+msgid "Beautiful and modern media controls with multi-instance support"
+msgstr "Contrôles multimédias beaux et modernes avec support multi-instances"
+
+msgid "Version 1.0"
+msgstr "Version 1.0"
+
+msgid "Modern media controls with native GNOME design"
+msgstr "Contrôles multimédias modernes avec design natif GNOME"
+
+msgid "Extension Links"
+msgstr "Liens de l'Extension"
+
+msgid "Source code, issues, and contributions"
+msgstr "Code source, problèmes et contributions"
+
+msgid "View on GitHub"
+msgstr "Voir sur GitHub"
+
+msgid "☕ Support by buying me a coffee – just scan the QR code!"
+msgstr "☕ Soutenez-moi en m'offrant un café – scannez simplement le code QR !"
+
+msgid "Preferred Method - Scan QR code to support development"
+msgstr "Méthode Préférée - Scannez le code QR pour soutenir le développement"
+
+msgid "Donation Address"
+msgstr "Adresse de Donation"
+
+msgid "☕ Buy Me a Coffee"
+msgstr "☕ Offrez-moi un Café"
+
+msgid "Support development with a small donation"
+msgstr "Soutenez le développement avec un petit don"
+
+msgid "License & Credits"
+msgstr "Licence et Crédits"
+
+msgid "Open source software information"
+msgstr "Informations sur le logiciel open source"
+
+msgid "Open Source License"
+msgstr "Licence Open Source"
+
+msgid "GPL-3.0 License - Free and open source software"
+msgstr "Licence GPL-3.0 - Logiciel libre et open source"
+
+msgid "Media Data Sources"
+msgstr "Sources de Données Multimédias"
+
+msgid "MPRIS D-Bus interface - Standard media player remote interfacing"
+msgstr "Interface MPRIS D-Bus - Interface distante standard pour lecteur multimédia"
+
+msgid "Key Features"
+msgstr "Fonctionnalités Principales"
+
+msgid "• Multi-instance browser support\n• Album art display\n• Smooth animations\n• Lock screen controls"
+msgstr "• Support multi-instances de navigateur\n• Affichage de la pochette d'album\n• Animations fluides\n• Contrôles sur écran de verrouillage"
+
+msgid "✅ %s copied to clipboard!"
+msgstr "✅ %s copié dans le presse-papiers !"
+
+msgid "Donation address"
+msgstr "Adresse de donation"
+
+msgid "Text"
+msgstr "Texte"
+
+msgid "💡 Text selected! Press Ctrl+C to copy"
+msgstr "💡 Texte sélectionné ! Appuyez sur Ctrl+C pour copier"
+
+msgid "Copy to Clipboard"
+msgstr "Copier dans le Presse-papiers"
+
+msgid "Unable to automatically copy to clipboard. Please manually copy the %s below:"
+msgstr "Impossible de copier automatiquement dans le presse-papiers. Veuillez copier manuellement le %s ci-dessous :"
+
+msgid "Close"
+msgstr "Fermer"
+
+msgid "Select Text"
+msgstr "Sélectionner le Texte"
+
+msgid "💡 Select the text above and press Ctrl+C to copy"
+msgstr "💡 Sélectionnez le texte ci-dessus et appuyez sur Ctrl+C pour copier"
+
+msgid "Position"
+msgstr "Position"
+
+msgid "Failed to toggle play/pause"
+msgstr "Échec de la bascule lecture/pause"
+
+msgid "Failed to skip next"
+msgstr "Échec du passage au suivant"
+
+msgid "Failed to skip previous"
+msgstr "Échec du passage au précédent"
+
+msgid "Failed to toggle shuffle"
+msgstr "Échec de la bascule aléatoire"
+
+msgid "Failed to cycle repeat"
+msgstr "Échec du changement de répétition"
+
+msgid "Failed to seek"
+msgstr "Échec de la recherche"
+
+msgid "No player info available"
+msgstr "Informations du lecteur non disponibles"
+
+msgid "Manager not available"
+msgstr "Gestionnaire non disponible"
+
+msgid "No proxy for %s"
+msgstr "Pas de proxy pour %s"
+
+msgid "Call failed or manager unavailable"
+msgstr "Appel échoué ou gestionnaire non disponible"
+
+msgid "Manager unavailable"
+msgstr "Gestionnaire non disponible"
+
+msgid "Manager destroyed or paused"
+msgstr "Gestionnaire détruit ou en pause"

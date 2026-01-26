@@ -1,0 +1,157 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh_TW\n"
+
+msgid "Advanced Media Controller"
+msgstr "進階媒體控制器"
+
+msgid "General"
+msgstr "一般"
+
+msgid "About"
+msgstr "關於"
+
+msgid "Panel Settings"
+msgstr "面板設定"
+
+msgid "Configure the position and appearance in the top panel"
+msgstr "設定頂部面板中的位置和外觀"
+
+msgid "Panel Position"
+msgstr "面板位置"
+
+msgid "Left"
+msgstr "左側"
+
+msgid "Center"
+msgstr "中央"
+
+msgid "Right"
+msgstr "右側"
+
+msgid "Panel Index"
+msgstr "面板索引"
+
+msgid "Position within the panel area (-1 for automatic)"
+msgstr "面板區域內的位置（-1表示自動）"
+
+msgid "Display Settings"
+msgstr "顯示設定"
+
+msgid "Configure what appears in the panel"
+msgstr "設定面板中顯示的內容"
+
+msgid "Show Track Name"
+msgstr "顯示曲目名稱"
+
+msgid "Display track information in the panel"
+msgstr "在面板中顯示曲目資訊"
+
+msgid "Show Artist Name"
+msgstr "顯示藝人名稱"
+
+msgid "Include artist name with track title"
+msgstr "在曲目標題中包含藝人名稱"
+
+msgid "Maximum Title Length"
+msgstr "最大標題長度"
+
+msgid "Characters to display before scrolling starts"
+msgstr "捲動開始前顯示的字元數"
+
+msgid "Scroll Speed"
+msgstr "捲動速度"
+
+msgid "1 = slowest, 10 = fastest"
+msgstr "1 = 最慢，10 = 最快"
+
+msgid "Separator Text"
+msgstr "分隔符號文字"
+
+msgid "Beautiful and modern media controls with multi-instance support"
+msgstr "支援多重實例的美觀現代媒體控制"
+
+msgid "Version 1.0"
+msgstr "版本 1.0"
+
+msgid "Modern media controls with native GNOME design"
+msgstr "採用原生GNOME設計的現代媒體控制"
+
+msgid "Extension Links"
+msgstr "擴充功能連結"
+
+msgid "Source code, issues, and contributions"
+msgstr "原始碼、問題和貢獻"
+
+msgid "View on GitHub"
+msgstr "在GitHub上檢視"
+
+msgid "☕ Support by buying me a coffee – just scan the QR code!"
+msgstr "☕ 請我喝杯咖啡來支持 - 掃描QR碼！"
+
+msgid "Preferred Method - Scan QR code to support development"
+msgstr "首選方法 - 掃描QR碼支援開發"
+
+msgid "Donation Address"
+msgstr "捐贈地址"
+
+msgid "☕ Buy Me a Coffee"
+msgstr "☕ 請我喝咖啡"
+
+msgid "Support development with a small donation"
+msgstr "透過小額捐贈支援開發"
+
+msgid "License & Credits"
+msgstr "授權與致謝"
+
+msgid "Open source software information"
+msgstr "開放原始碼軟體資訊"
+
+msgid "Open Source License"
+msgstr "開放原始碼授權"
+
+msgid "GPL-3.0 License - Free and open source software"
+msgstr "GPL-3.0授權 - 自由開放原始碼軟體"
+
+msgid "Media Data Sources"
+msgstr "媒體資料來源"
+
+msgid "MPRIS D-Bus interface - Standard media player remote interfacing"
+msgstr "MPRIS D-Bus介面 - 標準媒體播放器遠端介面"
+
+msgid "Key Features"
+msgstr "主要功能"
+
+msgid "• Multi-instance browser support\n• Album art display\n• Smooth animations\n• Lock screen controls"
+msgstr "• 多重實例瀏覽器支援\n• 專輯封面顯示\n• 流暢動畫\n• 鎖定畫面控制"
+
+msgid "Donation address"
+msgstr "捐贈地址"
+
+msgid "Text"
+msgstr "文字"
+
+msgid "✅ %s copied to clipboard!"
+msgstr "✅ %s已複製到剪貼簿！"
+
+msgid "Copy to Clipboard"
+msgstr "複製到剪貼簿"
+
+msgid "Unable to automatically copy to clipboard. Please manually copy the %s below:"
+msgstr "無法自動複製到剪貼簿。請手動複製下面的%s："
+
+msgid "text"
+msgstr "文字"
+
+msgid "Close"
+msgstr "關閉"
+
+msgid "Select Text"
+msgstr "選取文字"
+
+msgid "💡 Select the text above and press Ctrl+C to copy"
+msgstr "💡 選取上面的文字並按Ctrl+C複製"
+
+msgid "💡 Text selected! Press Ctrl+C to copy"
+msgstr "💡 文字已選取！按Ctrl+C複製"

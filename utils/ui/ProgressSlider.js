@@ -1,5 +1,3 @@
-// Replace ProgressSlider.js completely with this working version
-
 import St from "gi://St";
 import GObject from "gi://GObject";
 import GLib from "gi://GLib";
@@ -10,7 +8,7 @@ import * as Slider from "resource:///org/gnome/shell/ui/slider.js";
 export const ProgressSlider = GObject.registerClass(
   {
     Signals: {
-      "seek": { param_types: [GObject.TYPE_DOUBLE] },
+      seek: { param_types: [GObject.TYPE_DOUBLE] },
       "drag-begin": {},
       "drag-end": {},
     },
@@ -56,14 +54,13 @@ export const ProgressSlider = GObject.registerClass(
 
       this._positionSlider.connect("drag-end", () => {
         if (!this._sliderDragging) return;
-        
+
         this._sliderDragging = false;
         const newPosition = this._positionSlider.value * this._trackLength;
-        
+
         this.emit("seek", newPosition / 1000000);
         this.emit("drag-end");
-        
-        // Resume updates after seek
+
         GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
           if (this._isPlaying) {
             this.startPositionUpdate();
@@ -75,7 +72,6 @@ export const ProgressSlider = GObject.registerClass(
       sliderContainer.add_child(this._positionSlider);
       this.add_child(sliderContainer);
 
-      // Time labels
       const timeBox = new St.BoxLayout({
         style: "margin: 0 8px;",
       });
@@ -103,15 +99,13 @@ export const ProgressSlider = GObject.registerClass(
 
     updatePlaybackState(isPlaying, metadata, status) {
       this._isPlaying = isPlaying;
-      
+
       if (metadata) {
-        this._trackLength = metadata['mpris:length'] || 0;
-        this._trackId = metadata['mpris:trackid'] || null;
-        
-        // Update total time label
+        this._trackLength = metadata["mpris:length"] || 0;
+        this._trackId = metadata["mpris:trackid"] || null;
+
         this._totalTimeLabel.text = this._formatTime(this._trackLength / 1000000);
-        
-        // Check if track is seekable
+
         if (!this._trackId || !this._trackLength) {
           this._canSeek = false;
           this._positionSlider.reactive = false;
@@ -123,7 +117,7 @@ export const ProgressSlider = GObject.registerClass(
           this.visible = true;
         }
       }
-      
+
       if (isPlaying) {
         this.startPositionUpdate();
       } else {
@@ -133,7 +127,7 @@ export const ProgressSlider = GObject.registerClass(
 
     _syncGetProperty(busName, property) {
       if (!busName) return null;
-      
+
       try {
         const result = Gio.DBus.session.call_sync(
           busName,
@@ -144,7 +138,7 @@ export const ProgressSlider = GObject.registerClass(
           null,
           Gio.DBusCallFlags.NONE,
           50,
-          null
+          null,
         );
         return result.recursiveUnpack()[0];
       } catch (e) {
@@ -158,29 +152,22 @@ export const ProgressSlider = GObject.registerClass(
       }
 
       try {
-        // Get current position directly from D-Bus
         let position = this._syncGetProperty(this._playerName, "Position");
-        
+
         if (position === null || position === 0) {
-          // Fallback: calculate based on playback
           position = this._currentPosition;
         } else {
           this._currentPosition = position;
         }
 
-        // Ensure position is within bounds
         position = Math.max(0, Math.min(position, this._trackLength));
 
-        // Update slider
         this._positionSlider.block_signal_handler(this._sliderChangedId);
         this._positionSlider.value = this._trackLength > 0 ? position / this._trackLength : 0;
         this._positionSlider.unblock_signal_handler(this._sliderChangedId);
 
-        // Update time label
         this._currentTimeLabel.text = this._formatTime(position / 1000000);
-      } catch (e) {
-        // If error, just continue with last known position
-      }
+      } catch (e) {}
     }
 
     _updateTimeLabel() {
@@ -192,7 +179,7 @@ export const ProgressSlider = GObject.registerClass(
 
     _formatTime(seconds) {
       if (!seconds || isNaN(seconds) || seconds < 0) return "0:00";
-      
+
       seconds = Math.floor(seconds);
       const mins = Math.floor(seconds / 60);
       const secs = seconds % 60;
@@ -201,11 +188,8 @@ export const ProgressSlider = GObject.registerClass(
 
     startPositionUpdate() {
       this.stopPositionUpdate();
-      
-      // Update immediately
       this._updateSliderPosition();
-      
-      // Then update every second like the reference code
+
       this._updateInterval = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
         if (!this._sliderDragging && this._isPlaying) {
           this._updateSliderPosition();
@@ -223,26 +207,37 @@ export const ProgressSlider = GObject.registerClass(
 
     onSeeked(position) {
       this._currentPosition = position;
-      
+
       if (!this._sliderDragging) {
         this._updateSliderPosition();
       }
     }
 
-    get currentPosition() { return this._currentPosition; }
-    get trackLength() { return this._trackLength; }
-    set trackLength(value) { this._trackLength = value; }
-    get sliderValue() { return this._positionSlider.value; }
+    get currentPosition() {
+      return this._currentPosition;
+    }
+
+    get trackLength() {
+      return this._trackLength;
+    }
+
+    set trackLength(value) {
+      this._trackLength = value;
+    }
+
+    get sliderValue() {
+      return this._positionSlider.value;
+    }
 
     destroy() {
       this.stopPositionUpdate();
-      
+
       if (this._sliderChangedId) {
         this._positionSlider.disconnect(this._sliderChangedId);
         this._sliderChangedId = 0;
       }
-      
+
       super.destroy();
     }
-  }
+  },
 );

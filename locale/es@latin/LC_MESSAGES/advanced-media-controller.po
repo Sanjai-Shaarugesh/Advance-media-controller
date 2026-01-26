@@ -1,0 +1,222 @@
+# Spanish translations for advanced-media-controller package.
+# Copyright (C) 2026 THE advanced-media-controller'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the advanced-media-controller package.
+# Automatically generated, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: advanced-media-controller 1.0\n"
+"Report-Msgid-Bugs-To: https://github.com/Sanjai-Shaarugesh/Advance-media-"
+"controller/issues\n"
+"POT-Creation-Date: 2026-01-26 12:08+0530\n"
+"PO-Revision-Date: 2026-01-26 12:08+0530\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: es@latin\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: prefs.js:16 prefs.js:168 prefs.js:201
+msgid "Advanced Media Controller"
+msgstr ""
+
+#: prefs.js:21
+msgid "General"
+msgstr ""
+
+#: prefs.js:27
+msgid "Panel Settings"
+msgstr ""
+
+#: prefs.js:28
+msgid "Configure the position and appearance in the top panel"
+msgstr ""
+
+#: prefs.js:33
+msgid "Panel Position"
+msgstr ""
+
+#: prefs.js:37
+msgid "Left"
+msgstr ""
+
+#: prefs.js:38
+msgid "Center"
+msgstr ""
+
+#: prefs.js:39
+msgid "Right"
+msgstr ""
+
+#: prefs.js:53
+msgid "Panel Index"
+msgstr ""
+
+#: prefs.js:54
+msgid "Position within the panel area (-1 for automatic)"
+msgstr ""
+
+#: prefs.js:73
+msgid "Display Settings"
+msgstr ""
+
+#: prefs.js:74
+msgid "Configure what appears in the panel"
+msgstr ""
+
+#: prefs.js:79
+msgid "Show Track Name"
+msgstr ""
+
+#: prefs.js:80
+msgid "Display track information in the panel"
+msgstr ""
+
+#: prefs.js:93
+msgid "Show Artist Name"
+msgstr ""
+
+#: prefs.js:94
+msgid "Include artist name with track title"
+msgstr ""
+
+#: prefs.js:107
+msgid "Maximum Title Length"
+msgstr ""
+
+#: prefs.js:108
+msgid "Characters to display before scrolling starts"
+msgstr ""
+
+#: prefs.js:127
+msgid "Scroll Speed"
+msgstr ""
+
+#: prefs.js:128
+msgid "1 = slowest, 10 = fastest"
+msgstr ""
+
+#: prefs.js:147
+msgid "Separator Text"
+msgstr ""
+
+#: prefs.js:163
+msgid "About"
+msgstr ""
+
+#: prefs.js:170
+msgid "Beautiful and modern media controls with multi-instance support"
+msgstr ""
+
+#: prefs.js:207
+msgid "Version 1.0"
+msgstr ""
+
+#: prefs.js:213
+msgid "Modern media controls with native GNOME design"
+msgstr ""
+
+#: prefs.js:230
+msgid "Extension Links"
+msgstr ""
+
+#: prefs.js:231 prefs.js:236
+msgid "Source code, issues, and contributions"
+msgstr ""
+
+#: prefs.js:235
+msgid "View on GitHub"
+msgstr ""
+
+#: prefs.js:260
+msgid "☕ Support by buying me a coffee – just scan the QR code!"
+msgstr ""
+
+#: prefs.js:261
+msgid "Preferred Method - Scan QR code to support development"
+msgstr ""
+
+#: prefs.js:305
+msgid "Donation Address"
+msgstr ""
+
+#: prefs.js:330
+msgid "Donation address"
+msgstr ""
+
+#: prefs.js:334
+msgid "☕ Buy Me a Coffee"
+msgstr ""
+
+#: prefs.js:335
+msgid "Support development with a small donation"
+msgstr ""
+
+#: prefs.js:360
+msgid "License & Credits"
+msgstr ""
+
+#: prefs.js:361
+msgid "Open source software information"
+msgstr ""
+
+#: prefs.js:365
+msgid "Open Source License"
+msgstr ""
+
+#: prefs.js:366
+msgid "GPL-3.0 License - Free and open source software"
+msgstr ""
+
+#: prefs.js:376
+msgid "Media Data Sources"
+msgstr ""
+
+#: prefs.js:378
+msgid "MPRIS D-Bus interface - Standard media player remote interfacing"
+msgstr ""
+
+#: prefs.js:389
+msgid "Key Features"
+msgstr ""
+
+#: prefs.js:391
+msgid ""
+"• Multi-instance browser support\n"
+"• Album art display\n"
+"• Smooth animations\n"
+"• Lock screen controls"
+msgstr ""
+
+#: prefs.js:487
+#, javascript-format
+msgid "✅ %s copied to clipboard!"
+msgstr ""
+
+#: prefs.js:487
+msgid "Text"
+msgstr ""
+
+#: prefs.js:496
+msgid "Copy to Clipboard"
+msgstr ""
+
+#: prefs.js:497
+#, javascript-format
+msgid ""
+"Unable to automatically copy to clipboard. Please manually copy the %s below:"
+msgstr ""
+
+#: prefs.js:497
+msgid "text"
+msgstr ""
+
+#: prefs.js:500
+msgid "Close"
+msgstr ""
+
+#: prefs.js:522
+msgid "💡 Select the text above and press Ctrl+C to copy"
+msgstr ""

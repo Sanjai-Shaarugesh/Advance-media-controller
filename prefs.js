@@ -4,35 +4,39 @@ import Gio from "gi://Gio";
 import GLib from "gi://GLib";
 import Gdk from "gi://Gdk";
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
+import { initTranslations, gettext as _ } from "./utils/locale.js";
 
 export default class MediaControlsPreferences extends ExtensionPreferences {
   fillPreferencesWindow(window) {
+    // Initialize translations
+    initTranslations(this);
+
     const settings = this.getSettings();
 
-    window.set_title("Advanced Media Controller");
+    window.set_title(_("Advanced Media Controller"));
     window.set_default_size(700, 650);
     window.set_resizable(true);
 
     const generalPage = new Adw.PreferencesPage({
-      title: "General",
+      title: _("General"),
       icon_name: "preferences-system-symbolic",
     });
     window.add(generalPage);
 
     const panelGroup = new Adw.PreferencesGroup({
-      title: "Panel Settings",
-      description: "Configure the position and appearance in the top panel",
+      title: _("Panel Settings"),
+      description: _("Configure the position and appearance in the top panel"),
     });
     generalPage.add(panelGroup);
 
     const positionRow = new Adw.ComboRow({
-      title: "Panel Position",
+      title: _("Panel Position"),
     });
 
     const positionModel = new Gtk.StringList();
-    positionModel.append("Left");
-    positionModel.append("Center");
-    positionModel.append("Right");
+    positionModel.append(_("Left"));
+    positionModel.append(_("Center"));
+    positionModel.append(_("Right"));
     positionRow.model = positionModel;
 
     const positions = ["left", "center", "right"];
@@ -46,8 +50,8 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     panelGroup.add(positionRow);
 
     const indexRow = new Adw.SpinRow({
-      title: "Panel Index",
-      subtitle: "Position within the panel area (-1 for automatic)",
+      title: _("Panel Index"),
+      subtitle: _("Position within the panel area (-1 for automatic)"),
       adjustment: new Gtk.Adjustment({
         lower: -1,
         upper: 20,
@@ -66,14 +70,14 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     panelGroup.add(indexRow);
 
     const displayGroup = new Adw.PreferencesGroup({
-      title: "Display Settings",
-      description: "Configure what appears in the panel",
+      title: _("Display Settings"),
+      description: _("Configure what appears in the panel"),
     });
     generalPage.add(displayGroup);
 
     const showTrackRow = new Adw.SwitchRow({
-      title: "Show Track Name",
-      subtitle: "Display track information in the panel",
+      title: _("Show Track Name"),
+      subtitle: _("Display track information in the panel"),
     });
 
     settings.bind(
@@ -86,8 +90,8 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     displayGroup.add(showTrackRow);
 
     const showArtistRow = new Adw.SwitchRow({
-      title: "Show Artist Name",
-      subtitle: "Include artist name with track title",
+      title: _("Show Artist Name"),
+      subtitle: _("Include artist name with track title"),
     });
 
     settings.bind(
@@ -100,8 +104,8 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     displayGroup.add(showArtistRow);
 
     const maxLengthRow = new Adw.SpinRow({
-      title: "Maximum Title Length",
-      subtitle: "Characters to display before scrolling starts",
+      title: _("Maximum Title Length"),
+      subtitle: _("Characters to display before scrolling starts"),
       adjustment: new Gtk.Adjustment({
         lower: 10,
         upper: 100,
@@ -120,8 +124,8 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     displayGroup.add(maxLengthRow);
 
     const scrollSpeedRow = new Adw.SpinRow({
-      title: "Scroll Speed",
-      subtitle: "1 = slowest, 10 = fastest",
+      title: _("Scroll Speed"),
+      subtitle: _("1 = slowest, 10 = fastest"),
       adjustment: new Gtk.Adjustment({
         lower: 1,
         upper: 10,
@@ -140,7 +144,7 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     displayGroup.add(scrollSpeedRow);
 
     const separatorRow = new Adw.EntryRow({
-      title: "Separator Text",
+      title: _("Separator Text"),
       text: settings.get_string("separator-text"),
     });
 
@@ -156,14 +160,15 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
 
   _createAboutPage(settings) {
     const page = new Adw.PreferencesPage({
-      title: "About",
+      title: _("About"),
       icon_name: "help-about-symbolic",
     });
 
     const infoGroup = new Adw.PreferencesGroup({
-      title: "Advanced Media Controller",
-      description:
+      title: _("Advanced Media Controller"),
+      description: _(
         "Beautiful and modern media controls with multi-instance support",
+      ),
     });
 
     const headerBox = new Gtk.Box({
@@ -193,19 +198,19 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     });
 
     const titleLabel = new Gtk.Label({
-      label: "Advanced Media Controller",
+      label: _("Advanced Media Controller"),
       halign: Gtk.Align.START,
       css_classes: ["title-2"],
     });
 
     const versionLabel = new Gtk.Label({
-      label: "Version 1.0",
+      label: _("Version 1.0"),
       halign: Gtk.Align.START,
       css_classes: ["caption"],
     });
 
     const descLabel = new Gtk.Label({
-      label: "Modern media controls with native GNOME design",
+      label: _("Modern media controls with native GNOME design"),
       halign: Gtk.Align.START,
       wrap: true,
       max_width_chars: 40,
@@ -222,13 +227,13 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     headerRow.add_suffix(headerBox);
 
     const linksGroup = new Adw.PreferencesGroup({
-      title: "Extension Links",
-      description: "Source code, issues, and contributions",
+      title: _("Extension Links"),
+      description: _("Source code, issues, and contributions"),
     });
 
     const githubRow = new Adw.ActionRow({
-      title: "View on GitHub",
-      subtitle: "Source code, issues, and contributions",
+      title: _("View on GitHub"),
+      subtitle: _("Source code, issues, and contributions"),
       activatable: true,
     });
 
@@ -252,8 +257,8 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     });
 
     const qrGroup = new Adw.PreferencesGroup({
-      title: "☕ Support by buying me a coffee — just scan the QR code!",
-      description: "Preferred Method - Scan QR code to support development",
+      title: _("☕ Support by buying me a coffee – just scan the QR code!"),
+      description: _("Preferred Method - Scan QR code to support development"),
     });
 
     const qrContainer = new Gtk.Box({
@@ -297,7 +302,7 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     qrRow.set_child(qrContainer);
 
     const addressGroup = new Adw.PreferencesGroup({
-      title: "Donation Address",
+      title: _("Donation Address"),
       css_classes: ["address-group"],
     });
 
@@ -322,12 +327,12 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
 
     addressRow.connect("activated", () => {
       const address = "https://buymeacoffee.com/sanjai";
-      this._copyToClipboard(address, "Donation address");
+      this._copyToClipboard(address, _("Donation address"));
     });
 
     const sponsorRow = new Adw.ActionRow({
-      title: "☕ Buy Me a Coffee",
-      subtitle: "Support development with a small donation",
+      title: _("☕ Buy Me a Coffee"),
+      subtitle: _("Support development with a small donation"),
       activatable: true,
     });
     const heartIcon = new Gtk.Image({
@@ -352,13 +357,13 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     });
 
     const licenseGroup = new Adw.PreferencesGroup({
-      title: "License & Credits",
-      description: "Open source software information",
+      title: _("License & Credits"),
+      description: _("Open source software information"),
     });
 
     const licenseRow = new Adw.ActionRow({
-      title: "Open Source License",
-      subtitle: "GPL-3.0 License - Free and open source software",
+      title: _("Open Source License"),
+      subtitle: _("GPL-3.0 License - Free and open source software"),
       activatable: false,
     });
     const licenseIcon = new Gtk.Image({
@@ -368,9 +373,10 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     licenseRow.add_prefix(licenseIcon);
 
     const creditsRow = new Adw.ActionRow({
-      title: "Media Data Sources",
-      subtitle:
+      title: _("Media Data Sources"),
+      subtitle: _(
         "MPRIS D-Bus interface - Standard media player remote interfacing",
+      ),
       activatable: false,
     });
     const apiIcon = new Gtk.Image({
@@ -380,9 +386,10 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     creditsRow.add_prefix(apiIcon);
 
     const featuresRow = new Adw.ActionRow({
-      title: "Key Features",
-      subtitle:
+      title: _("Key Features"),
+      subtitle: _(
         "• Multi-instance browser support\n• Album art display\n• Smooth animations\n• Lock screen controls",
+      ),
       activatable: false,
     });
     const featuresIcon = new Gtk.Image({
@@ -476,69 +483,22 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
         throw new Error("No clipboard available");
       }
 
-      clipboard.set_text_async(text, -1, null, (clipboard, result) => {
-        try {
-          clipboard.set_text_finish(result);
-          this._showToast(`✅ ${label || "Text"} copied to clipboard!`);
-        } catch (error) {
-          console.log("Async clipboard set failed:", error.message);
-          this._trySync(clipboard, text, label);
-        }
-      });
-      return;
+      clipboard.set(text);
+      console.log(_("✅ %s copied to clipboard!").replace("%s", label || _("Text")));
     } catch (error) {
-      console.log("Async clipboard method failed:", error.message);
-    }
-
-    try {
-      const display = Gdk.Display.get_default();
-      const clipboard = display?.get_clipboard();
-      if (clipboard) {
-        this._trySync(clipboard, text, label);
-        return;
-      }
-    } catch (error) {
-      console.log("Sync clipboard method failed:", error.message);
-    }
-
-    console.log("All clipboard methods failed, showing manual copy dialog");
-    this._showCopyDialog(text, label);
-  }
-
-  _trySync(clipboard, text, label) {
-    try {
-      clipboard.set_text(text);
-      this._showToast(`✅ ${label || "Text"} copied to clipboard!`);
-      return true;
-    } catch (error) {
-      console.log("Synchronous clipboard failed:", error.message);
-
-      try {
-        const contentProvider = Gdk.ContentProvider.new_for_value(text);
-        if (contentProvider) {
-          clipboard.set_content(contentProvider);
-          this._showToast(`✅ ${label || "Text"} copied to clipboard!`);
-          return true;
-        }
-      } catch (providerError) {
-        console.log("Content provider approach failed:", providerError.message);
-      }
-
-      return false;
+      console.error("Clipboard error:", error);
+      this._showCopyDialog(text, label);
     }
   }
 
   _showCopyDialog(text, label = null) {
-    const dialog = new Adw.MessageDialog({
-      heading: "Copy to Clipboard",
-      body: `Unable to automatically copy to clipboard. Please manually copy the ${label || "text"} below:`,
-      modal: true,
+    const dialog = new Adw.AlertDialog({
+      heading: _("Copy to Clipboard"),
+      body: _("Unable to automatically copy to clipboard. Please manually copy the %s below:").replace("%s", label || _("text")),
     });
 
-    dialog.add_response("close", "Close");
-    dialog.add_response("select", "Select Text");
-    dialog.set_response_appearance("select", Adw.ResponseAppearance.SUGGESTED);
-    dialog.set_default_response("select");
+    dialog.add_response("close", _("Close"));
+    dialog.set_default_response("close");
 
     const contentBox = new Gtk.Box({
       orientation: Gtk.Orientation.VERTICAL,
@@ -549,32 +509,17 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
       margin_end: 12,
     });
 
-    const textView = new Gtk.TextView({
+    const entry = new Gtk.Entry({
+      text: text,
       editable: false,
-      cursor_visible: true,
-      wrap_mode: Gtk.WrapMode.CHAR,
-      css_classes: ["monospace", "card"],
-      margin_top: 8,
-      margin_bottom: 8,
-      margin_start: 8,
-      margin_end: 8,
+      can_focus: true,
+      width_chars: 40,
     });
 
-    const scrolledWindow = new Gtk.ScrolledWindow({
-      child: textView,
-      height_request: Math.min(120, Math.max(40, text.length / 3)),
-      hscrollbar_policy: Gtk.PolicyType.AUTOMATIC,
-      vscrollbar_policy: Gtk.PolicyType.AUTOMATIC,
-      css_classes: ["view"],
-    });
-
-    const buffer = textView.get_buffer();
-    buffer.set_text(text, -1);
-
-    contentBox.append(scrolledWindow);
+    contentBox.append(entry);
 
     const instructionLabel = new Gtk.Label({
-      label: "💡 Select the text above and press Ctrl+C to copy",
+      label: _("💡 Select the text above and press Ctrl+C to copy"),
       css_classes: ["caption", "dim-label"],
       halign: Gtk.Align.CENTER,
       margin_top: 8,
@@ -582,37 +527,6 @@ export default class MediaControlsPreferences extends ExtensionPreferences {
     contentBox.append(instructionLabel);
 
     dialog.set_extra_child(contentBox);
-
-    dialog.connect("response", (dialog, response) => {
-      if (response === "select") {
-        const startIter = buffer.get_start_iter();
-        const endIter = buffer.get_end_iter();
-        buffer.select_range(startIter, endIter);
-        textView.grab_focus();
-
-        try {
-          const display = Gdk.Display.get_default();
-          if (display) {
-            const clipboard = display.get_clipboard();
-            if (clipboard) {
-              clipboard.set_text(text);
-              this._showToast(`✅ ${label || "Text"} copied to clipboard!`);
-              dialog.close();
-              return;
-            }
-          }
-        } catch (e) {
-          this._showToast("💡 Text selected! Press Ctrl+C to copy");
-        }
-        return;
-      }
-      dialog.close();
-    });
-
     dialog.present();
-  }
-
-  _showToast(message) {
-    console.log(message);
   }
 }
